@@ -630,12 +630,39 @@ html:has(.admin-shell) body {
   transition: max-height 0.2s ease-in-out, opacity 0.2s ease-in-out;
 }
 
+/* Loading skeleton: stays invisible for the first 150ms (fast loads never flash it), fades in, then breathes slowly. */
+.astryd-skeleton {
+  animation: astryd-skeleton-in 0.25s ease-out 0.15s both, astryd-skeleton-breathe 2.4s ease-in-out 0.4s infinite;
+}
+@keyframes astryd-skeleton-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes astryd-skeleton-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Reduced motion: no looping effects (a 0.01ms infinite loop strobes), transitions become instant.
+   Spinners are functional feedback, so they keep turning at a calm pace. */
 @media (prefers-reduced-motion: reduce) {
   .admin-shell *,
   .admin-shell *::before,
   .admin-shell *::after {
-    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  .admin-shell .astryd-skeleton {
+    animation: none;
+    opacity: 1;
+  }
+  .admin-shell .animate-pulse {
+    animation: none !important;
+  }
+  .admin-shell .animate-spin,
+  .admin-shell .astryd-spinner {
+    animation-duration: 1.5s !important;
+    animation-iteration-count: infinite !important;
   }
 }
 
