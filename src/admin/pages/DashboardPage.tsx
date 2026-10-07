@@ -95,7 +95,7 @@ function AvailabilityRing({ percent }: { percent: number }) {
   const offset = c * (1 - clamped / 100);
 
   return (
-    <div className="relative h-[108px] w-[108px] shrink-0">
+    <div className="relative h-[136px] w-[136px] shrink-0">
       <svg viewBox="0 0 88 88" className="h-full w-full -rotate-90">
         <circle cx="44" cy="44" r={r} fill="none" style={{ stroke: 'var(--astryd-progress-track)' }} strokeWidth="8" />
         <circle
@@ -110,7 +110,7 @@ function AvailabilityRing({ percent }: { percent: number }) {
           strokeDashoffset={offset}
         />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold astryd-text-strong">{clamped}%</div>
+      <div className="absolute inset-0 flex items-center justify-center text-[24px] font-extrabold tabular-nums astryd-text-strong">{clamped}%</div>
     </div>
   );
 }
@@ -196,6 +196,7 @@ export function DashboardPage() {
             className="flex-1"
             label="Menu Items"
             value={items.length}
+            hint={items.length ? `${available} available` : 'None added yet'}
             icon={UtensilsCrossed}
             tone="primary"
             onClick={() => navigate('/admin/menu/items')}
@@ -204,6 +205,7 @@ export function DashboardPage() {
             className="flex-1"
             label="Categories"
             value={categories.length}
+            hint={categories.length ? 'Organizing your menu' : 'None added yet'}
             icon={LayoutGrid}
             tone="tertiary"
             onClick={() => navigate('/admin/menu/categories')}
@@ -212,6 +214,7 @@ export function DashboardPage() {
             className="flex-1"
             label="Active Offers"
             value={activeOffers}
+            hint={activeOffers ? 'Running now' : 'None running'}
             icon={Tag}
             tone="secondary"
             onClick={() => navigate('/admin/menu/offers')}
@@ -271,18 +274,22 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className="col-span-12 lg:col-span-5 min-w-0 admin-card p-5 sm:p-6 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center gap-2 astryd-text-cyan text-[10px] font-semibold uppercase tracking-[0.12em]">
-              <Sparkles className="h-3.5 w-3.5" />
-              Add-ons
+        <div className="col-span-12 lg:col-span-5 min-w-0 admin-card p-5 sm:p-6 flex flex-col justify-between gap-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[rgba(0,196,205,0.1)] astryd-text-cyan">
+              <Sparkles className="h-5 w-5" />
             </div>
-            <div className="text-[24px] font-extrabold tabular-nums astryd-text-bright mt-2">{addons?.length ?? 0}</div>
-            <p className="text-sm text-secondary mt-2">Extras guests can add when they customize a dish.</p>
+            <div className="text-[13px] font-medium astryd-text-muted">Add-ons</div>
           </div>
+
+          <div className="flex items-end gap-4">
+            <div className="text-[56px] font-extrabold leading-none tracking-tight tabular-nums astryd-text-strong">{addons?.length ?? 0}</div>
+            <p className="pb-1 text-[13px] leading-snug astryd-text-muted max-w-[16rem]">Extras guests can add when they customize a dish.</p>
+          </div>
+
           <button
             onClick={() => navigate('/admin/menu/addons')}
-            className="mt-5 inline-flex items-center gap-1.5 text-[13px] font-medium astryd-text-cyan hover:opacity-90 transition-opacity"
+            className="astryd-btn h-10 w-full gap-2 px-4 text-[14px]"
           >
             Manage add-ons
             <ArrowRight className="h-4 w-4" />
@@ -344,13 +351,13 @@ export function DashboardPage() {
           </ul>
         </div>
 
-        <div className="col-span-12 xl:col-span-4 min-w-0 astryd-card p-6 flex items-center justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-[12px] astryd-text-muted">Menu ready</p>
-            <h3 className="text-[24px] font-extrabold tabular-nums astryd-text-bright tracking-tight mt-1">
+        <div className="col-span-12 xl:col-span-4 min-w-0 astryd-card p-6 flex items-center justify-between gap-5">
+          <div className="min-w-0 space-y-2">
+            <p className="text-[13px] font-medium astryd-text-muted">Menu ready</p>
+            <h3 className="text-[34px] font-extrabold leading-none tracking-tight tabular-nums astryd-text-strong">
               {availablePct === 100 ? 'Complete' : `${available} available`}
             </h3>
-            <p className="text-[11px] astryd-text-dim mt-2">
+            <p className="text-[13px] leading-snug astryd-text-dim">
               {unavailable === 0 ? 'Every dish is on the menu.' : `${unavailable} currently hidden from guests.`}
             </p>
           </div>
