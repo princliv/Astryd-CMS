@@ -19,7 +19,6 @@ import {
   Eye,
   ChevronDown,
   Search,
-  Settings,
   ShoppingBag,
   CalendarDays,
   ChevronsUpDown,
@@ -566,13 +565,6 @@ export function Sidebar() {
                 <div className="truncate text-[12px] leading-tight astryd-text-bright">{userName}</div>
                 <div className="truncate text-[10px] capitalize leading-tight astryd-text-muted">{userSub}</div>
               </div>
-              <NavLink
-                to="/admin/settings/account"
-                className="rounded-md p-1.5 astryd-text-muted transition-colors hover:text-[var(--astryd-text-bright)]"
-                aria-label="Account settings"
-              >
-                <Settings className="h-[14px] w-[14px]" />
-              </NavLink>
             </div>
           )}
         </div>

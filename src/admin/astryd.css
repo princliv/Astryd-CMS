@@ -630,21 +630,30 @@ html:has(.admin-shell) body {
   transition: max-height 0.2s ease-in-out, opacity 0.2s ease-in-out;
 }
 
-/* Loading skeleton: stays invisible for the first 150ms (fast loads never flash it), fades in, then breathes slowly. */
+/* Loading skeleton: hidden for the first 150ms (fast loads never flash it), then fades in with a soft highlight
+   that sweeps left to right on a loop. */
 .astryd-skeleton {
-  animation: astryd-skeleton-in 0.25s ease-out 0.15s both, astryd-skeleton-breathe 2.4s ease-in-out 0.4s infinite;
+  --astryd-shimmer: rgba(255, 255, 255, 0.65);
+  background-image: linear-gradient(90deg, transparent 0%, var(--astryd-shimmer) 50%, transparent 100%);
+  background-size: 60% 100%;
+  background-repeat: no-repeat;
+  background-position: -100% 0;
+  animation: astryd-skeleton-in 0.25s ease-out 0.15s both, astryd-skeleton-sweep 1.6s ease-in-out 0.15s infinite;
+}
+.dark .astryd-skeleton {
+  --astryd-shimmer: rgba(143, 168, 200, 0.2);
 }
 @keyframes astryd-skeleton-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-@keyframes astryd-skeleton-breathe {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+@keyframes astryd-skeleton-sweep {
+  from { background-position: -100% 0; }
+  to { background-position: 200% 0; }
 }
 
-/* Reduced motion: no looping effects (a 0.01ms infinite loop strobes), transitions become instant.
-   Spinners are functional feedback, so they keep turning at a calm pace. */
+/* Reduced motion: no fast looping effects (a 0.01ms infinite loop strobes), transitions become instant.
+   Spinners and the skeleton sweep are loading feedback, so they keep going at a calm pace. */
 @media (prefers-reduced-motion: reduce) {
   .admin-shell *,
   .admin-shell *::before,
@@ -652,9 +661,9 @@ html:has(.admin-shell) body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  /* The skeleton sweep is a slow, low-contrast loading cue, so it keeps running - just calmer. */
   .admin-shell .astryd-skeleton {
-    animation: none;
-    opacity: 1;
+    animation: astryd-skeleton-in 0.25s ease-out 0.15s both, astryd-skeleton-sweep 2.8s ease-in-out 0.15s infinite !important;
   }
   .admin-shell .animate-pulse {
     animation: none !important;
