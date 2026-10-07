@@ -1,5 +1,5 @@
 export function Skeleton({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse rounded-lg bg-surface-container-high ${className}`} />;
+  return <div className={`animate-pulse rounded-lg bg-[var(--astryd-progress-track)] ${className}`} />;
 }
 
 export function PageSkeleton() {

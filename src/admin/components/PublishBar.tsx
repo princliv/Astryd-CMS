@@ -70,32 +70,32 @@ export function PublishBar({
 
   return (
     <>
-      <div ref={barRef} className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 bg-surface border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-3 -mx-4 sm:-mx-6 lg:-mx-8 mb-6">
-        <div className="text-xs text-secondary">
+      <div ref={barRef} className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 astryd-sticky border-b border-[var(--astryd-divider)] px-4 sm:px-6 lg:px-8 py-3 -mx-4 sm:-mx-6 lg:-mx-8 mb-6">
+        <div className="text-[12px] astryd-text-muted">
           {statusLabel}
           {lastPublishedAt && (isDirty || saving || autoSaveStatus === 'saved') && (
-            <span className="ml-2 text-secondary/70">• Last published {new Date(lastPublishedAt).toLocaleString()}</span>
+            <span className="ml-2 astryd-text-dim">• Last published {new Date(lastPublishedAt).toLocaleString()}</span>
           )}
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={onSaveDraft}
             disabled={!isDirty || saving}
-            className="px-4 py-2 rounded-xl border border-outline-variant/40 text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-40"
+            className="astryd-btn astryd-btn-neutral h-9 px-3.5 text-[13px]"
           >
             {saving ? 'Saving...' : 'Save Draft'}
           </button>
           <button
             onClick={() => void handlePreview()}
             disabled={isPreviewing}
-            className="px-4 py-2 rounded-xl border border-outline-variant/40 text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50"
+            className="astryd-btn astryd-btn-neutral h-9 px-3.5 text-[13px]"
           >
             {isPreviewing ? 'Saving...' : 'Preview'}
           </button>
           <button
             onClick={onPublish}
             disabled={isPublishing || saving}
-            className="px-5 py-2 rounded-xl bg-primary text-on-primary text-sm font-bold hover:bg-primary-container transition-colors disabled:opacity-50"
+            className="astryd-btn h-9 px-4 text-[13px]"
           >
             {isPublishing ? 'Publishing...' : 'Publish Changes'}
           </button>

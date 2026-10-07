@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -14,11 +14,12 @@ import {
   Share2,
   User,
   Users,
-  Sparkles,
   X,
   PanelLeftClose,
-  PanelLeftOpen,
   Eye,
+  ChevronDown,
+  Search,
+  Settings,
   ShoppingBag,
   CalendarDays,
   ChevronsUpDown,
@@ -33,8 +34,10 @@ import { useSidebar } from '../context/SidebarContext';
 import { draftPreviewUrl, useDraftSave } from '../context/DraftSaveContext';
 import { useRestaurant } from '../../context/RestaurantContext';
 import { usePageConfigs } from '../hooks/api/usePageConfigs';
+import { useAuth } from '../../context/AuthContext';
 import { Tooltip } from './Tooltip';
 import { PreviewModal } from './PreviewModal';
+import { BrandMark } from './BrandMark';
 
 /** Multi-Vertical Platform Plan §10.2 - only appears once an Org has more than one Site; a single-Site Org sees the plain brand mark, unchanged. */
 function SiteSwitcher() {
@@ -52,14 +55,7 @@ function SiteSwitcher() {
   }, [isOpen]);
 
   if (sites.length <= 1) {
-    return (
-      <div className="flex items-center gap-2.5 min-w-0">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary shadow-md shadow-primary/20">
-          <Sparkles className="h-4 w-4" />
-        </div>
-        <span className="text-lg font-bold text-on-surface truncate tracking-tight">{sites[0]?.name ?? ''}</span>
-      </div>
-    );
+    return <BrandMark name={sites[0]?.name || 'Lumière'} />;
   }
 
   const activeSite = sites.find((s) => s.id === restaurantId) ?? sites[0];
@@ -69,18 +65,15 @@ function SiteSwitcher() {
       <button
         type="button"
         onClick={() => setIsOpen((o) => !o)}
-        className="flex w-full items-center gap-2.5 min-w-0 rounded-xl px-1.5 py-1 -ml-1.5 hover:bg-surface-container-low transition-colors"
+        className="-ml-1.5 flex w-full min-w-0 items-center gap-2 rounded-lg px-1.5 py-1 transition-colors hover:bg-[var(--astryd-hover)]"
       >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary shadow-md shadow-primary/20">
-          <Sparkles className="h-4 w-4" />
-        </div>
-        <span className="text-sm font-bold text-on-surface truncate tracking-tight flex-1 text-left">{activeSite.name}</span>
-        <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-secondary" />
+        <BrandMark name={activeSite.name} />
+        <ChevronsUpDown className="ml-auto h-3.5 w-3.5 shrink-0 astryd-text-dim" />
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1 w-64 rounded-xl border border-outline-variant/20 bg-surface shadow-lg z-50 py-1.5">
-          <div className="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-widest text-secondary">Sites</div>
+        <div className="astryd-dropdown absolute left-0 top-full z-50 mt-1 w-64 py-1.5">
+          <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] astryd-text-dim">Sites</div>
           {sites.map((site) => (
             <button
               key={site.id}
@@ -89,10 +82,10 @@ function SiteSwitcher() {
                 setActiveSiteId(site.id);
                 setIsOpen(false);
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-left text-on-surface hover:bg-surface-container-low transition-colors"
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] astryd-text-bright transition-colors hover:bg-[var(--astryd-hover)]"
             >
               <span className="flex-1 truncate">{site.name}</span>
-              {site.id === activeSite.id && <Check className="h-4 w-4 text-primary shrink-0" />}
+              {site.id === activeSite.id && <Check className="h-4 w-4 shrink-0 astryd-text-cyan" />}
             </button>
           ))}
         </div>
@@ -116,6 +109,89 @@ interface NavGroup {
 }
 
 const COLLAPSED_STORAGE_KEY = 'admin_sidebar_collapsed';
+const CLOSED_GROUPS_STORAGE_KEY = 'admin_sidebar_closed_groups';
+
+function loadClosedGroups(): Set<string> {
+  try {
+    const raw = localStorage.getItem(CLOSED_GROUPS_STORAGE_KEY);
+    if (raw) return new Set(JSON.parse(raw) as string[]);
+  } catch {
+    // Unreadable preference - start with every group open.
+  }
+  return new Set<string>();
+}
+
+function saveClosedGroups(groups: Set<string>) {
+  try {
+    localStorage.setItem(CLOSED_GROUPS_STORAGE_KEY, JSON.stringify([...groups]));
+  } catch {
+    // Preference just won't persist.
+  }
+}
+
+function getInitials(name?: string) {
+  if (!name?.trim()) return '?';
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
+
+/** Astryd's collapsible nav group: uppercase 10px label, right chevron, item-count pill while closed, animated height. */
+function CollapsibleGroup({
+  label,
+  itemCount,
+  hasActiveChild,
+  isExpanded,
+  onToggle,
+  children,
+}: {
+  label: string;
+  itemCount: number;
+  hasActiveChild: boolean;
+  isExpanded: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  const innerRef = useRef<HTMLDivElement>(null);
+  const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    if (!innerRef.current) return;
+    const observer = new ResizeObserver(([entry]) => setMeasuredHeight((entry.target as HTMLElement).offsetHeight));
+    observer.observe(innerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div>
+      <div className="mx-2 my-2 h-px bg-[var(--astryd-divider)]" />
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`flex w-full select-none items-center gap-1.5 rounded-md px-2 py-1.5 transition-colors ${
+          hasActiveChild ? 'astryd-text-bright' : 'astryd-text-dim hover:text-[var(--astryd-text-muted)]'
+        }`}
+      >
+        <span className="flex-1 text-left text-[10px] font-semibold uppercase tracking-[0.08em]">{label}</span>
+        {!isExpanded && itemCount > 0 && (
+          <span
+            className={`min-w-[14px] rounded-full px-1 py-px text-center text-[8px] font-semibold leading-tight tabular-nums ${
+              hasActiveChild ? 'bg-[rgba(0,196,205,0.12)] astryd-text-cyan' : 'bg-[var(--astryd-hover)] astryd-text-dim'
+            }`}
+          >
+            {itemCount}
+          </span>
+        )}
+        <ChevronDown className={`h-[10px] w-[10px] shrink-0 transition-transform duration-200 astryd-text-dim ${isExpanded ? '' : '-rotate-90'}`} />
+      </button>
+      <div className="astryd-nav-collapse" style={{ maxHeight: isExpanded ? (measuredHeight ?? 1000) : 0, opacity: isExpanded ? 1 : 0 }}>
+        <div ref={innerRef} className="flex flex-col gap-0.5 pb-0.5 pt-1">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function Sidebar() {
   const perms = usePermissions();
@@ -123,6 +199,9 @@ export function Sidebar() {
   const { restaurantId } = useRestaurant();
   const { mobileOpen, closeMobile, searchQuery, setSearchQuery } = useSidebar();
   const { flushDraft } = useDraftSave();
+  const { user } = useAuth();
+  const { sites } = useRestaurant();
+  const [closedGroups, setClosedGroups] = useState<Set<string>>(loadClosedGroups);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const handlePreview = async () => {
@@ -275,85 +354,142 @@ export function Sidebar() {
     return () => window.removeEventListener('keydown', handler);
   }, [toggleCollapse]);
 
+  const toggleGroup = useCallback((key: string) => {
+    setClosedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      saveClosedGroups(next);
+      return next;
+    });
+  }, []);
+
+  // Navigating into a closed group re-opens it so the active page is never hidden.
+  const prevPathRef = useRef(location.pathname);
+  useEffect(() => {
+    if (location.pathname === prevPathRef.current) return;
+    prevPathRef.current = location.pathname;
+    const owner = visibleGroups.find((g) => g.items.some((item) => isActive(item)));
+    if (!owner) return;
+    setClosedGroups((prev) => {
+      if (!prev.has(owner.key)) return prev;
+      const next = new Set(prev);
+      next.delete(owner.key);
+      saveClosedGroups(next);
+      return next;
+    });
+  }, [location.pathname, visibleGroups, isActive]);
+
   const renderItem = (item: NavItem, collapsed: boolean) => {
     const active = isActive(item);
     const Icon = item.icon;
 
-    return (
+    const link = (
       <NavLink
         key={item.to}
         to={item.to}
         end={item.end}
-        className={`relative rounded-xl text-sm font-medium transition-colors ${
-          collapsed ? 'flex flex-col items-center justify-center gap-1 w-full px-1 py-2' : 'flex items-center gap-3 px-3 py-2.5'
-        } ${active ? 'bg-primary/10 text-primary font-semibold' : 'text-secondary hover:bg-surface-container-low hover:text-on-surface'}`}
+        className={`group relative flex h-6 items-center gap-2 rounded-md text-[12px] leading-none transition-colors ${
+          collapsed ? 'w-9 justify-center px-0' : 'px-2'
+        } ${
+          active
+            ? 'bg-[rgba(0,196,205,0.08)] font-medium astryd-text-bright'
+            : 'astryd-text-muted hover:bg-[var(--astryd-hover)] hover:text-[var(--astryd-text-bright)]'
+        }`}
       >
-        {active && !collapsed && (
-          <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-primary" />
-        )}
-        <Icon className="h-[18px] w-[18px] shrink-0" />
-        {collapsed ? (
-          <span className="w-full text-center text-[10px] leading-tight font-medium line-clamp-2">{item.label}</span>
-        ) : (
-          <span className="truncate">{item.label}</span>
-        )}
+        <Icon className={`h-[13px] w-[13px] shrink-0 ${active ? 'astryd-text-cyan' : 'astryd-text-muted'}`} />
+        {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
       </NavLink>
+    );
+
+    return collapsed ? (
+      <Tooltip key={item.to} label={item.label}>
+        {link}
+      </Tooltip>
+    ) : (
+      <div key={item.to}>{link}</div>
     );
   };
 
-  const renderNav = (collapsed: boolean) => (
-    <nav className={`flex-1 overflow-y-auto py-4 ${collapsed ? 'px-2 flex flex-col items-center gap-1' : 'px-3 space-y-1'}`}>
-      {displayGroups.map((group, idx) => {
-        if (collapsed) {
-          return (
-            <div key={group.key} className="flex flex-col items-center gap-1 w-full">
-              {idx > 0 && <div className="w-8 h-px bg-outline-variant/40 my-1" />}
-              {group.items.map((item) => renderItem(item, true))}
-            </div>
-          );
-        }
+  const renderNav = (collapsed: boolean) => {
+    const isSearching = searchQuery.trim().length > 0;
+    return (
+      <nav className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${collapsed ? 'items-center px-0 py-1.5' : 'px-2.5 py-1.5'}`}>
+        {displayGroups.map((group, idx) => {
+          const groupHasActive = group.items.some((item) => isActive(item));
 
-        return (
-          <div key={group.key} className="pb-2">
-            {group.title && (
-              <div className="px-3 mb-1.5 text-[11px] font-bold uppercase tracking-widest text-secondary">{group.title}</div>
-            )}
-            <div className="space-y-0.5">{group.items.map((item) => renderItem(item, false))}</div>
-          </div>
-        );
-      })}
-    </nav>
-  );
+          if (collapsed) {
+            return (
+              <div key={group.key}>
+                {idx > 0 && <div className="mx-2 my-2 h-px bg-[var(--astryd-divider)]" />}
+                <div className="flex flex-col items-center gap-0.5">{group.items.map((item) => renderItem(item, true))}</div>
+              </div>
+            );
+          }
+
+          // Untitled group (the main links) is always visible, no header.
+          if (!group.title) {
+            return (
+              <div key={group.key} className="flex flex-col gap-0.5">
+                {group.items.map((item) => renderItem(item, false))}
+              </div>
+            );
+          }
+
+          if (isSearching) {
+            return (
+              <div key={group.key}>
+                <div className="mx-2 my-2 h-px bg-[var(--astryd-divider)]" />
+                <div className="px-2 py-1">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.08em] astryd-text-dim">{group.title}</span>
+                </div>
+                <div className="flex flex-col gap-0.5">{group.items.map((item) => renderItem(item, false))}</div>
+              </div>
+            );
+          }
+
+          return (
+            <CollapsibleGroup
+              key={group.key}
+              label={group.title}
+              itemCount={group.items.length}
+              hasActiveChild={groupHasActive}
+              isExpanded={!closedGroups.has(group.key)}
+              onToggle={() => toggleGroup(group.key)}
+            >
+              {group.items.map((item) => renderItem(item, false))}
+            </CollapsibleGroup>
+          );
+        })}
+      </nav>
+    );
+  };
 
   const effectiveCollapsed = mobileOpen ? false : isCollapsed;
+  const userName = user?.name || 'Guest';
+  const siteName = sites.find((s) => s.id === restaurantId)?.name ?? sites[0]?.name ?? '';
+  const userSub = perms.isSuperAdmin ? 'Platform' : siteName || user?.role?.replace('_', ' ') || '';
 
   return (
     <>
-      {mobileOpen && (
-        <div className="fixed inset-0 z-40 bg-[#1e2a78]/40 lg:hidden" onClick={closeMobile} aria-hidden="true" />
-      )}
+      {mobileOpen && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={closeMobile} aria-hidden="true" />}
 
       <aside
-        className={`fixed lg:relative inset-y-0 left-0 z-50 shrink-0 h-full bg-surface flex flex-col transition-[width,transform] duration-300 ease-in-out lg:translate-x-0 ${
+        className={`astryd-sidebar-bg fixed inset-y-0 left-0 z-50 flex h-full shrink-0 flex-col transition-[width,transform] duration-300 ease-in-out lg:relative lg:z-10 lg:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:flex'
         }`}
         style={{ width: effectiveCollapsed ? 'var(--admin-sidebar-w-collapsed)' : 'var(--admin-sidebar-w)' }}
       >
-        <div className={`h-16 shrink-0 flex items-center ${effectiveCollapsed ? 'justify-center px-2' : 'justify-between px-5'}`}>
+        <div className={`flex h-14 shrink-0 items-center ${effectiveCollapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
           {effectiveCollapsed ? (
             <Tooltip label="Expand sidebar (Ctrl+B)">
-              <button onClick={toggleCollapse} className="p-1.5 rounded-xl text-primary hover:bg-primary/10" aria-label="Expand sidebar">
-                <Sparkles className="h-6 w-6" />
+              <button onClick={toggleCollapse} className="flex h-7 w-7 items-center justify-center rounded-md" aria-label="Expand sidebar">
+                <BrandMark showName={false} size="sm" />
               </button>
             </Tooltip>
           ) : perms.isSuperAdmin ? (
             // Not scoped to any Site, so no Site name/switcher - just the platform brand mark.
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary shadow-md shadow-primary/20">
-                <Building2 className="h-4 w-4" />
-              </div>
-              <span className="text-lg font-bold text-on-surface truncate tracking-tight">Platform</span>
-            </div>
+            <BrandMark name="Platform" />
           ) : (
             <SiteSwitcher />
           )}
@@ -361,57 +497,85 @@ export function Sidebar() {
           {!effectiveCollapsed && (
             <button
               onClick={toggleCollapse}
-              className="hidden lg:inline-flex p-1.5 rounded-lg text-secondary hover:bg-surface-container-low hover:text-on-surface transition-colors"
+              className="hidden rounded-md p-1 astryd-text-muted transition-colors hover:text-[var(--astryd-text-bright)] lg:inline-flex"
               aria-label="Collapse sidebar"
             >
-              <PanelLeftClose className="h-[18px] w-[18px]" />
+              <PanelLeftClose className="h-[14px] w-[14px]" />
             </button>
           )}
 
           {mobileOpen && (
-            <button onClick={closeMobile} className="lg:hidden p-1 rounded-lg text-secondary hover:bg-surface-container-high" aria-label="Close menu">
-              <X className="h-5 w-5" />
+            <button onClick={closeMobile} className="rounded-md p-1 astryd-text-muted hover:text-[var(--astryd-text-bright)] lg:hidden" aria-label="Close menu">
+              <X className="h-4 w-4" />
             </button>
           )}
         </div>
+
+        {!effectiveCollapsed && (
+          <div className="shrink-0 px-3 pb-2">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 astryd-text-dim" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search…"
+                aria-label="Search navigation"
+                className="h-8 w-full rounded-lg border border-[var(--astryd-card-stroke)] bg-[var(--astryd-input-fill)] pl-8 pr-3 text-[12px] astryd-text-muted outline-none transition-colors placeholder:text-[var(--astryd-text-dim)] focus:border-[rgba(0,196,205,0.3)] focus:bg-[var(--astryd-hover)]"
+              />
+            </div>
+          </div>
+        )}
 
         {renderNav(effectiveCollapsed)}
 
         {!perms.isSuperAdmin && (
-        <div className="shrink-0 p-3 space-y-2">
-          {effectiveCollapsed ? (
-            <div className="flex flex-col items-center gap-2">
-              <button
-                type="button"
-                onClick={() => void handlePreview()}
-                className="flex w-full flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-on-primary transition-colors"
-                aria-label="Preview website"
-              >
-                <Eye className="h-4 w-4" />
-                <span className="w-full text-center text-[10px] leading-tight font-medium">Preview</span>
-              </button>
-              <Tooltip label="Expand sidebar">
-                <button onClick={toggleCollapse} className="p-1.5 rounded-lg text-secondary hover:bg-surface-container-high" aria-label="Expand sidebar">
-                  <PanelLeftOpen className="h-[18px] w-[18px]" />
+          <div className={`shrink-0 ${effectiveCollapsed ? 'flex justify-center px-2 pb-2' : 'px-3 pb-3'}`}>
+            {effectiveCollapsed ? (
+              <Tooltip label="Preview website">
+                <button type="button" onClick={() => void handlePreview()} className="astryd-btn h-8 w-9 rounded-md" aria-label="Preview website">
+                  <Eye className="h-[14px] w-[14px]" />
                 </button>
               </Tooltip>
+            ) : (
+              <div className="astryd-card-cyan p-3">
+                <div className="text-[12px] font-medium astryd-text-bright">Preview website</div>
+                <p className="mt-1 text-[11px] leading-snug astryd-text-muted">Saves your latest edits, then shows the whole site right here.</p>
+                <button type="button" onClick={() => void handlePreview()} className="astryd-btn mt-2.5 h-8 w-full gap-1.5 text-[12px]">
+                  <Eye className="h-3.5 w-3.5" />
+                  Preview
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="shrink-0 border-t" style={{ borderColor: 'rgba(143, 168, 200, 0.08)' }}>
+          {effectiveCollapsed ? (
+            <div className="flex flex-col items-center gap-1.5 py-3">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--astryd-cyan)] text-[10px] font-medium text-white">
+                {getInitials(userName)}
+              </div>
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={() => void handlePreview()}
-              className="block w-full text-left rounded-3xl bg-gradient-to-br from-[#6d7cff] via-[#6b8bff] to-[#a78bfa] p-4 text-white shadow-lg shadow-primary/20 hover:brightness-105 transition"
-            >
-              <div className="text-sm font-bold leading-snug">Preview website</div>
-              <p className="text-[11px] text-white/80 mt-1">Saves your latest edits, then shows the whole site right here.</p>
-              <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-primary">
-                Preview
-                <Eye className="h-3 w-3" />
-              </span>
-            </button>
+            <div className="flex items-center gap-2 px-3 py-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--astryd-cyan)] text-[11px] font-medium text-white">
+                {getInitials(userName)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[12px] leading-tight astryd-text-bright">{userName}</div>
+                <div className="truncate text-[10px] capitalize leading-tight astryd-text-muted">{userSub}</div>
+              </div>
+              <NavLink
+                to="/admin/settings/account"
+                className="rounded-md p-1.5 astryd-text-muted transition-colors hover:text-[var(--astryd-text-bright)]"
+                aria-label="Account settings"
+              >
+                <Settings className="h-[14px] w-[14px]" />
+              </NavLink>
+            </div>
           )}
         </div>
-        )}
       </aside>
 
       <PreviewModal isOpen={isPreviewOpen} onClose={() => setIsPreviewOpen(false)} url={draftPreviewUrl(restaurantId)} />

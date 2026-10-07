@@ -13,19 +13,18 @@ function FieldWrapper({ label, hint, required, children, className = '', htmlFor
   return (
     <div className={className}>
       {label && (
-        <label htmlFor={htmlFor} className="block text-sm font-semibold text-on-surface mb-1.5">
+        <label htmlFor={htmlFor} className="block text-[12px] astryd-text-muted mb-1.5">
           {label}
-          {required && <span className="text-error ml-0.5">*</span>}
+          {required && <span className="astryd-text-dim"> *</span>}
         </label>
       )}
       {children}
-      {hint && <p className="text-xs text-secondary mt-1.5">{hint}</p>}
+      {hint && <p className="text-[11px] astryd-text-dim mt-1.5">{hint}</p>}
     </div>
   );
 }
 
-const inputBase =
-  'w-full rounded-xl border border-outline-variant/40 bg-surface px-3 py-2.5 text-sm text-on-surface placeholder:text-secondary/70 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/10';
+const inputBase = 'astryd-input w-full px-3';
 
 interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement>, Omit<FieldWrapperProps, 'children' | 'className'> {
   icon?: LucideIcon;
@@ -38,8 +37,8 @@ export function TextField({ label, hint, required, icon: Icon, wrapperClassName,
   return (
     <FieldWrapper label={label} hint={hint} required={required} className={wrapperClassName} htmlFor={id}>
       <div className="relative">
-        {Icon && <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />}
-        <input className={`${inputBase} ${Icon ? 'pl-9' : ''} ${className}`} {...rest} id={id} />
+        {Icon && <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 astryd-text-dim" />}
+        <input className={`${inputBase} h-9 ${Icon ? '!pl-10' : ''} ${className}`} {...rest} id={id} />
       </div>
     </FieldWrapper>
   );
@@ -54,7 +53,7 @@ export function TextareaField({ label, hint, required, wrapperClassName, classNa
   const id = rest.id ?? autoId;
   return (
     <FieldWrapper label={label} hint={hint} required={required} className={wrapperClassName} htmlFor={id}>
-      <textarea className={`${inputBase} resize-none ${className}`} {...rest} id={id} />
+      <textarea className={`${inputBase} py-2 resize-none ${className}`} {...rest} id={id} />
     </FieldWrapper>
   );
 }
@@ -68,7 +67,7 @@ export function SelectField({ label, hint, required, wrapperClassName, className
   const id = rest.id ?? autoId;
   return (
     <FieldWrapper label={label} hint={hint} required={required} className={wrapperClassName} htmlFor={id}>
-      <select className={`${inputBase} ${className}`} {...rest} id={id}>
+      <select className={`${inputBase} h-9 ${className}`} {...rest} id={id}>
         {children}
       </select>
     </FieldWrapper>

@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, Loader2, Check, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Loader2, Check, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { ApiError } from '../../../services/http';
 import { TextField, TextareaField } from '../../components/forms/Field';
 import { ToggleField } from '../../components/forms/ToggleField';
+import { BrandMark } from '../../components/BrandMark';
+import { ModeToggle } from '../../components/ModeToggle';
 import { VERTICAL_LABEL, VERTICAL_DESCRIPTION, VERTICAL_MODULE_DEFAULTS, type ModuleDefault } from '../../../data/onboardingDefaults';
 import { VERTICALS, THEME_PRESETS } from '../../../types';
 import type { Vertical } from '../../../types';
@@ -92,12 +94,13 @@ export function SignupPage() {
 
   if (result) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4 font-sans">
-        <div className="w-full max-w-md text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-on-primary shadow-lg shadow-primary/20">
+      <div className="astryd-bg relative min-h-screen flex items-center justify-center px-4 font-sans">
+        <div className="absolute right-4 top-4 z-20"><ModeToggle /></div>
+        <div className="relative z-10 w-full max-w-md text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-on-primary">
             <Check className="h-7 w-7" />
           </div>
-          <h1 className="text-3xl font-bold text-on-surface mt-5 tracking-tight">Your site is ready to edit</h1>
+          <h1 className="text-[24px] font-semibold text-on-surface mt-5 tracking-tight">Your site is ready to edit</h1>
           <p className="text-sm text-secondary mt-2">
             Save your Organization ID below. {result.emailVerificationRequiredForPublish !== false ? 'Verify your email, then edit and publish when ready.' : 'Edit your draft, preview it, then publish when ready. Email verification is deferred.'} Your site address is <span className="font-mono">/s/{slug}</span>.
           </p>
@@ -116,7 +119,7 @@ export function SignupPage() {
 
           <button
             onClick={() => navigate('/admin', { replace: true })}
-            className="w-full mt-6 py-3 rounded-full bg-primary text-on-primary font-bold text-sm hover:bg-primary-container transition-colors shadow-md shadow-primary/20"
+            className="w-full mt-6 py-3 rounded-full bg-primary text-on-primary font-bold text-sm hover:bg-primary-container transition-colors"
           >
             Go to your Dashboard
           </button>
@@ -126,14 +129,13 @@ export function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-10 font-sans">
-      <div className="w-full max-w-2xl">
+    <div className="astryd-bg relative min-h-screen flex items-center justify-center px-4 py-10 font-sans">
+      <div className="absolute right-4 top-4 z-20"><ModeToggle /></div>
+      <div className="relative z-10 w-full max-w-2xl">
         <div className="text-center mb-8">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-on-primary shadow-lg shadow-primary/20">
-            <Sparkles className="h-6 w-6" />
-          </div>
-          <h1 className="text-3xl font-bold text-on-surface mt-4 tracking-tight">Create your site</h1>
-          <p className="text-sm text-secondary mt-1">Five quick steps and you're live.</p>
+          <div className="flex items-center justify-center"><BrandMark /></div>
+          <h1 className="text-[24px] font-semibold text-on-surface mt-4 tracking-tight">Create your site</h1>
+          <p className="text-[13px] text-secondary mt-1.5">Five quick steps and you're live.</p>
         </div>
 
         <div className="flex items-center gap-2 mb-6">
@@ -145,7 +147,7 @@ export function SignupPage() {
           ))}
         </div>
 
-        <div className="admin-card p-8">
+        <div className="astryd-auth-card !max-w-none p-8">
           {step === 1 && (
             <div className="space-y-4">
               <h2 className="text-lg font-bold text-on-surface">What kind of business is this?</h2>

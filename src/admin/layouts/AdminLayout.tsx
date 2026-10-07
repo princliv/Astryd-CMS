@@ -8,10 +8,10 @@ function AdminLayoutContent() {
   const isFullBleed = Boolean(useMatch('/admin/website/pages/:page'));
 
   return (
-    <div className="h-screen flex bg-background font-sans overflow-hidden">
+    <div className="astryd-bg relative h-screen flex font-sans overflow-hidden">
       <Sidebar />
 
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="relative z-10 flex-1 min-w-0 flex flex-col">
         <AdminTopBar />
         {isFullBleed ? (
           <main className="flex-1 min-h-0 overflow-hidden">

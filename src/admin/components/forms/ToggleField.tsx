@@ -10,8 +10,8 @@ export function ToggleField({ label, checked, onChange, description, disabled }:
   return (
     <label className={`flex items-center justify-between gap-4 py-2 ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
       <div>
-        <div className="text-sm font-semibold text-on-surface">{label}</div>
-        {description && <div className="text-xs text-secondary mt-0.5">{description}</div>}
+        <div className="text-[13px] font-medium astryd-text-bright">{label}</div>
+        {description && <div className="text-[11px] astryd-text-muted mt-0.5">{description}</div>}
       </div>
       <button
         type="button"
@@ -20,8 +20,6 @@ export function ToggleField({ label, checked, onChange, description, disabled }:
         aria-label={label || undefined}
         disabled={disabled}
         onClick={() => onChange(!checked)}
-        // Solid palette colours on purpose: opacity modifiers on the theme's CSS-variable colours (e.g. `bg-outline-variant/50`)
-        // generate no CSS under the Tailwind CDN build, which left the "off" track fully transparent.
         className={`relative w-11 h-6 rounded-full transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed ${
           checked ? 'bg-primary' : 'bg-slate-300 hover:bg-slate-400'
         }`}

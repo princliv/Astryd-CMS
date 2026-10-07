@@ -11,35 +11,39 @@ interface MetricCardProps {
   className?: string;
 }
 
+/** Icon-tile hues from AstryAi's summary cards (cyan / purple / blue / red on a 10% tint). */
 const TONE_CLASSES: Record<Required<MetricCardProps>['tone'], string> = {
-  primary: 'bg-indigo-50 text-primary',
-  tertiary: 'bg-violet-50 text-violet-600',
-  secondary: 'bg-sky-50 text-sky-600',
-  error: 'bg-rose-50 text-rose-500',
+  primary: 'bg-[rgba(0,196,205,0.1)] astryd-text-cyan',
+  tertiary: 'bg-purple-500/10 text-purple-500',
+  secondary: 'bg-blue-500/10 text-blue-500',
+  error: 'bg-red-500/10 text-red-400',
 };
 
+/** Astryd stat card: 12px muted label with an icon tile, then a 24px extra-bold tabular value and an 11px dim detail. */
 export function MetricCard({ label, value, icon: Icon, hint, tone = 'primary', onClick, className = '' }: MetricCardProps) {
   const Tag = onClick ? 'button' : 'div';
 
   return (
     <Tag
       onClick={onClick}
-      className={`group text-left admin-card p-5 w-full h-full flex flex-col justify-between transition-all ${
-        onClick ? 'hover:-translate-y-0.5 hover:shadow-lg cursor-pointer' : ''
+      className={`group astryd-card astryd-card-sm text-left p-4 w-full h-full min-h-[104px] flex flex-col justify-between gap-3 transition-colors ${
+        onClick ? 'cursor-pointer hover:border-[rgba(0,196,205,0.3)]' : ''
       } ${className}`}
     >
-      <div className="flex items-start justify-between">
-        <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${TONE_CLASSES[tone]}`}>
-          <Icon className="h-5 w-5" />
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[12px] astryd-text-muted">{label}</span>
+        <div className="flex items-center gap-1.5">
+          {onClick && (
+            <ArrowUpRight className="h-3.5 w-3.5 astryd-text-dim opacity-0 transition-opacity group-hover:opacity-100" />
+          )}
+          <div className={`rounded-lg p-1.5 ${TONE_CLASSES[tone]}`}>
+            <Icon className="h-3.5 w-3.5" />
+          </div>
         </div>
-        {onClick && (
-          <ArrowUpRight className="h-4 w-4 text-secondary opacity-0 -translate-x-1 translate-y-1 transition-all group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0" />
-        )}
       </div>
-      <div className="mt-4">
-        <div className="text-[11px] text-secondary font-medium">{label}</div>
-        <div className="text-2xl font-bold text-on-surface mt-1 tracking-tight">{value}</div>
-        {hint && <div className="text-[11px] text-secondary/80 mt-1.5">{hint}</div>}
+      <div className="space-y-2">
+        <div className="text-[24px] font-extrabold leading-none tracking-tight tabular-nums astryd-text-bright">{value}</div>
+        {hint && <div className="text-[11px] astryd-text-dim">{hint}</div>}
       </div>
     </Tag>
   );

@@ -11,7 +11,7 @@ const TONE_CLASSES: Record<StatusPillProps['tone'], string> = {
 
 export function StatusPill({ label, tone }: StatusPillProps) {
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${TONE_CLASSES[tone]}`}>
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold border ${TONE_CLASSES[tone]}`}>
       {label}
     </span>
   );

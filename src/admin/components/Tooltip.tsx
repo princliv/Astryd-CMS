@@ -23,7 +23,7 @@ export function Tooltip({ label, children }: TooltipProps) {
         createPortal(
           <span
             role="tooltip"
-            className="fixed z-[200] -translate-y-1/2 whitespace-nowrap rounded-lg bg-surface-container-highest px-2.5 py-1.5 text-xs font-medium text-on-surface shadow-lg border border-outline-variant/20"
+            className="astryd-dropdown fixed z-[200] -translate-y-1/2 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-medium astryd-text-bright"
             style={{ top: pos.top, left: pos.left }}
           >
             {label}

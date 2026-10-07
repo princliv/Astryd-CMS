@@ -10,21 +10,15 @@ interface ConfirmDialogProps {
 export function ConfirmDialog({ isOpen, title, description, confirmLabel = 'Delete', onConfirm, onCancel }: ConfirmDialogProps) {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-surface w-full max-w-sm rounded-2xl shadow-2xl border border-outline-variant/20 p-6 space-y-4">
-        <h3 className="text-xl font-bold text-on-surface tracking-tight">{title}</h3>
-        <p className="text-sm text-secondary leading-relaxed">{description}</p>
-        <div className="flex justify-end gap-3 pt-2">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 rounded-xl border border-outline-variant/40 text-sm font-medium text-secondary hover:bg-surface-container-high transition-colors"
-          >
+    <div className="astryd-overlay fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="astryd-modal w-full max-w-sm p-4 space-y-3">
+        <h3 className="text-[16px] font-medium astryd-text-bright">{title}</h3>
+        <p className="text-[12px] astryd-text-muted leading-relaxed">{description}</p>
+        <div className="flex justify-end gap-2.5 pt-2">
+          <button onClick={onCancel} className="astryd-btn astryd-btn-neutral h-9 px-3.5 text-[13px]">
             Cancel
           </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 rounded-xl bg-error text-on-error text-sm font-bold hover:opacity-90 transition-opacity"
-          >
+          <button onClick={onConfirm} className="astryd-btn astryd-btn-danger h-9 px-3.5 text-[13px]">
             {confirmLabel}
           </button>
         </div>

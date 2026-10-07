@@ -1,0 +1,658 @@
+/* ============================================================
+   ASTRYD DESIGN SYSTEM — admin dashboards + login screens.
+   Ported from the AstryAi app (src/index.css): same tokens, same
+   Inter type scale, same cyan accent, same light/dark themes.
+
+   * Tokens live on :root / .dark (class on <html>, toggled by ThemeProvider).
+   * The Tailwind palette the admin pages are written against (bg-surface,
+     text-on-surface, text-primary, border-outline-variant/40 ...) is remapped
+     onto those tokens under `.admin-shell`, so every existing page re-skins
+     without being rewritten.
+   * Nothing here applies outside the admin app: the public restaurant site
+     never mounts `.admin-shell` and never gets the `.dark` class.
+   ============================================================ */
+
+:root {
+  color-scheme: light;
+
+  /* Brand */
+  --astryd-cyan: #00c4cd;
+  --astryd-cyan-light: #5eeef5;
+  --astryd-cyan-dark: #0097a7;
+  --astryd-cyan-glow: #004347;
+
+  /* Status */
+  --astryd-success: #34d399;
+  --astryd-warning: #f59e0b;
+  --astryd-danger: #f87171;
+
+  /* Light surface tokens */
+  --astryd-bg-from: #dff4f8;
+  --astryd-bg-to: #eef3fa;
+  --astryd-side-from: #e8eef6;
+  --astryd-side-to: #e8eef6;
+  --astryd-card-fill: #ffffff;
+  --astryd-card-stroke: rgba(15, 37, 64, 0.06);
+  --astryd-border: var(--astryd-card-stroke);
+  --astryd-border-strong: rgba(15, 37, 64, 0.12);
+  --astryd-divider: rgba(15, 37, 64, 0.06);
+  --astryd-hover: rgba(15, 37, 64, 0.04);
+  --astryd-input-fill: #ffffff;
+  --astryd-progress-track: #e2eaf4;
+  --astryd-modal-surface: rgba(255, 255, 255, 0.92);
+  --astryd-modal-overlay: rgba(15, 37, 64, 0.25);
+  --astryd-header-fill: rgba(238, 243, 250, 0.82);
+
+  /* Text */
+  --astryd-text-strong: #111827;
+  --astryd-text-bright: #1f2937;
+  --astryd-text-muted: #4b5563;
+  --astryd-text-dim: #6b7280;
+
+  /* Radii */
+  --astryd-radius-sm: 10px;
+  --astryd-radius-md: 12px;
+  --astryd-radius-lg: 16px;
+  --astryd-radius-pill: 9999px;
+
+  /* Layout */
+  --astryd-sidebar-w: 220px;
+  --astryd-sidebar-w-collapsed: 64px;
+  --admin-sidebar-w: var(--astryd-sidebar-w);
+  --admin-sidebar-w-collapsed: var(--astryd-sidebar-w-collapsed);
+}
+
+.dark {
+  color-scheme: dark;
+
+  --astryd-bg-from: #0f2540;
+  --astryd-bg-to: #050b16;
+  --astryd-side-from: #0f1e35;
+  --astryd-side-to: #060d19;
+  --astryd-card-fill: rgba(255, 255, 255, 0.04);
+  --astryd-card-stroke: rgba(255, 255, 255, 0.1);
+  --astryd-border: var(--astryd-card-stroke);
+  --astryd-border-strong: rgba(255, 255, 255, 0.16);
+  --astryd-divider: rgba(143, 168, 200, 0.05);
+  --astryd-hover: rgba(255, 255, 255, 0.04);
+  --astryd-input-fill: rgba(255, 255, 255, 0.04);
+  --astryd-progress-track: rgba(143, 168, 200, 0.15);
+  --astryd-modal-surface: rgba(143, 168, 200, 0.3);
+  --astryd-modal-overlay: rgba(0, 0, 0, 0.4);
+  --astryd-header-fill: rgba(8, 18, 33, 0.7);
+
+  --astryd-text-strong: #ffffff;
+  --astryd-text-bright: #e8f0f8;
+  --astryd-text-muted: #8fa8c8;
+  --astryd-text-dim: #4a6480;
+}
+
+/* Astryd runs a 15px root so its 12-13px UI text scales the same way here. Admin only. */
+html:has(.admin-shell) {
+  font-size: 15px;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  text-rendering: optimizeLegibility;
+  background: var(--astryd-bg-to);
+  color-scheme: light;
+}
+
+html.dark:has(.admin-shell) {
+  color-scheme: dark;
+}
+
+html:has(.admin-shell) body {
+  background: var(--astryd-bg-to);
+  color: var(--astryd-text-bright);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+/* ------------------------------------------------------------
+   Semantic palette → Astryd tokens
+   ------------------------------------------------------------ */
+.admin-shell {
+  --color-primary: #00c4cd;
+  --color-on-primary: #001a1d;
+  --color-primary-container: #00b0b9;
+  --color-on-primary-container: #001a1d;
+  --color-primary-fixed: #c9f3f5;
+  --color-primary-fixed-dim: #5eeef5;
+  --color-on-primary-fixed: #003f43;
+  --color-on-primary-fixed-variant: #0097a7;
+  --color-tertiary: #0097a7;
+  --color-tertiary-container: #5eeef5;
+  --color-surface: #ffffff;
+  --color-surface-bright: #ffffff;
+  --color-surface-container: #eef3fa;
+  --color-surface-container-low: #f4f7fb;
+  --color-surface-container-high: #e2eaf4;
+  --color-surface-container-highest: #d6e0ee;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-variant: #f4f7fb;
+  --color-surface-dim: #e2eaf4;
+  --color-surface-tint: #00c4cd;
+  --color-background: #eef3fa;
+  --color-on-surface: #1f2937;
+  --color-on-surface-variant: #4b5563;
+  --color-on-background: #1f2937;
+  --color-secondary: #4b5563;
+  --color-secondary-container: #e2eaf4;
+  --color-on-secondary-container: #374151;
+  --color-outline: #6b7280;
+  --color-outline-variant: #d5deeb;
+  --color-inverse-primary: #5eeef5;
+  --color-error: #dc2626;
+  --color-on-error: #ffffff;
+  --color-error-container: #fee2e2;
+  --color-on-error-container: #7f1d1d;
+  --admin-navy: #0f2540;
+  --admin-indigo: #00c4cd;
+  --font-heading: 'Inter';
+  --font-body: 'Inter';
+
+  color: var(--color-on-surface);
+  background: var(--astryd-bg-to);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.dark .admin-shell {
+  --color-primary: #00c4cd;
+  --color-on-primary: #001a1d;
+  --color-primary-container: #00b0b9;
+  --color-on-primary-container: #001a1d;
+  --color-primary-fixed: #063a40;
+  --color-primary-fixed-dim: #5eeef5;
+  --color-on-primary-fixed: #c9f3f5;
+  --color-on-primary-fixed-variant: #5eeef5;
+  --color-tertiary: #5eeef5;
+  --color-tertiary-container: #0097a7;
+  --color-surface: #0f1e35;
+  --color-surface-bright: #13253f;
+  --color-surface-container: #162a47;
+  --color-surface-container-low: #13253f;
+  --color-surface-container-high: #1b3050;
+  --color-surface-container-highest: #223858;
+  --color-surface-container-lowest: #0b1729;
+  --color-surface-variant: #13253f;
+  --color-surface-dim: #0a1424;
+  --color-surface-tint: #00c4cd;
+  --color-background: #050b16;
+  --color-on-surface: #e8f0f8;
+  --color-on-surface-variant: #8fa8c8;
+  --color-on-background: #e8f0f8;
+  --color-secondary: #8fa8c8;
+  --color-secondary-container: #1b3050;
+  --color-on-secondary-container: #c3d3e8;
+  --color-outline: #4a6480;
+  --color-outline-variant: #223858;
+  --color-inverse-primary: #00c4cd;
+  --color-error: #f87171;
+  --color-on-error: #1f0a0a;
+  --color-error-container: #3a1a22;
+  --color-on-error-container: #fecaca;
+  --admin-navy: #0f2540;
+
+  background: var(--astryd-bg-to);
+}
+
+/* ------------------------------------------------------------
+   Page background (radial gradient + corner glows)
+   ------------------------------------------------------------ */
+.astryd-bg {
+  position: relative;
+  background: radial-gradient(120% 100% at 100% 0%, var(--astryd-bg-from) 0%, var(--astryd-bg-to) 100%);
+}
+.astryd-bg::before,
+.astryd-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.astryd-bg::before {
+  background: radial-gradient(60% 100% at 100% 0%, rgba(179, 239, 242, 1) 0%, rgba(179, 239, 242, 0) 100%);
+  opacity: 0.15;
+}
+.astryd-bg::after {
+  background: radial-gradient(60% 100% at 0% 100%, rgba(232, 239, 248, 1) 0%, rgba(232, 239, 248, 0) 100%);
+  opacity: 0.7;
+}
+.dark .astryd-bg::before {
+  background: radial-gradient(60% 100% at 100% 0%, rgba(0, 80, 90, 0.45) 0%, rgba(0, 80, 90, 0) 100%);
+  opacity: 0.3;
+}
+.dark .astryd-bg::after {
+  background: radial-gradient(60% 100% at 0% 100%, rgba(0, 80, 90, 0.4) 0%, rgba(0, 80, 90, 0) 100%);
+  opacity: 0.3;
+}
+
+.astryd-sidebar-bg {
+  background: linear-gradient(180deg, var(--astryd-side-from) 22%, var(--astryd-side-to) 100%);
+}
+
+/* ------------------------------------------------------------
+   Surfaces
+   ------------------------------------------------------------ */
+.astryd-card,
+.admin-card {
+  background-color: var(--astryd-card-fill);
+  border-width: 1px;
+  border-color: var(--astryd-card-stroke);
+  border-radius: var(--astryd-radius-lg);
+  backdrop-filter: blur(2px);
+}
+.astryd-card-sm {
+  border-radius: var(--astryd-radius-md);
+}
+.astryd-card-cyan {
+  background-color: rgba(0, 196, 205, 0.06);
+  border: 1px solid rgba(0, 196, 205, 0.2);
+  border-radius: var(--astryd-radius-lg);
+}
+.dark .astryd-card-cyan {
+  background-color: rgba(0, 196, 205, 0.04);
+}
+.astryd-modal {
+  background: var(--astryd-modal-surface);
+  border: 1px solid var(--astryd-card-stroke);
+  border-radius: var(--astryd-radius-sm);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+.dark .astryd-modal {
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.4);
+}
+.astryd-overlay {
+  background: var(--astryd-modal-overlay);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.astryd-dropdown {
+  background: var(--astryd-modal-surface);
+  border: 1px solid var(--astryd-card-stroke);
+  border-radius: var(--astryd-radius-md);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+.dark .astryd-dropdown {
+  background: rgba(15, 30, 53, 0.97);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+}
+.astryd-sticky {
+  background: var(--astryd-header-fill);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.astryd-divider {
+  background-color: var(--astryd-divider);
+}
+
+/* Text */
+.astryd-text-strong { color: var(--astryd-text-strong); }
+.astryd-text-bright { color: var(--astryd-text-bright); }
+.astryd-text-muted { color: var(--astryd-text-muted); }
+.astryd-text-dim { color: var(--astryd-text-dim); }
+.astryd-text-cyan { color: var(--astryd-cyan); }
+.astryd-text-success { color: var(--astryd-success); }
+.astryd-text-warning { color: var(--astryd-warning); }
+.astryd-text-danger { color: var(--astryd-danger); }
+.astryd-hover-bright:hover { color: var(--astryd-text-bright); }
+.astryd-hover-muted:hover { color: var(--astryd-text-muted); }
+
+/* ------------------------------------------------------------
+   Controls
+   Selectors are `.admin-shell .x` (0,2,0) so they beat Tailwind's runtime preflight / forms-plugin
+   resets regardless of stylesheet order. They deliberately leave size, padding, width, gap and
+   font-size alone: callers set those with utilities (and `!` when they must beat a rule here).
+   ------------------------------------------------------------ */
+.admin-shell .astryd-input {
+  border-width: 1px;
+  border-color: var(--astryd-card-stroke);
+  border-radius: 8px;
+  background-color: var(--astryd-input-fill);
+  color: var(--astryd-text-bright);
+  font-size: 13px;
+  line-height: 1.25rem;
+  outline: none;
+  box-shadow: none;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.admin-shell .astryd-input::placeholder {
+  color: var(--astryd-text-dim);
+  opacity: 1;
+}
+.admin-shell .astryd-input:focus {
+  border-color: rgba(0, 196, 205, 0.35);
+  box-shadow: none;
+  outline: none;
+}
+.admin-shell .astryd-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Primary action: cyan-tinted (login "Sign in", WorkforceActionButton) */
+.admin-shell .astryd-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-width: 1px;
+  border-radius: var(--astryd-radius-sm);
+  border-color: rgba(0, 196, 205, 0.25);
+  background-color: rgba(0, 196, 205, 0.12);
+  color: var(--astryd-cyan);
+  font-weight: 500;
+  transition: background-color 0.15s, border-color 0.15s, opacity 0.15s, color 0.15s;
+}
+.admin-shell .astryd-btn:hover:not(:disabled) {
+  background-color: rgba(0, 196, 205, 0.18);
+}
+.admin-shell .astryd-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+/* Outline (FinanceLedgerOutlineButton) */
+.admin-shell .astryd-btn.astryd-btn-outline {
+  background-color: transparent;
+  border-color: var(--astryd-cyan);
+}
+.admin-shell .astryd-btn.astryd-btn-outline:hover:not(:disabled) {
+  background-color: rgba(0, 196, 205, 0.08);
+}
+/* Neutral secondary (AstryAi Button "outline") */
+.admin-shell .astryd-btn.astryd-btn-neutral {
+  background-color: var(--astryd-card-fill);
+  border-color: var(--astryd-border-strong);
+  color: var(--astryd-text-bright);
+}
+.admin-shell .astryd-btn.astryd-btn-neutral:hover:not(:disabled) {
+  background-color: var(--astryd-hover);
+}
+.admin-shell .astryd-btn.astryd-btn-ghost {
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--astryd-text-muted);
+}
+.admin-shell .astryd-btn.astryd-btn-ghost:hover:not(:disabled) {
+  background-color: var(--astryd-hover);
+  color: var(--astryd-text-bright);
+}
+.admin-shell .astryd-btn.astryd-btn-danger {
+  background-color: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.28);
+  color: var(--astryd-danger);
+}
+.admin-shell .astryd-btn.astryd-btn-danger:hover:not(:disabled) {
+  background-color: rgba(248, 113, 113, 0.18);
+}
+.admin-shell .astryd-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 1px;
+  border-radius: 8px;
+  border-color: var(--astryd-card-stroke);
+  background-color: var(--astryd-card-fill);
+  transition: background-color 0.2s;
+}
+.admin-shell .astryd-btn-icon:hover {
+  background-color: var(--astryd-hover);
+}
+
+.astryd-spinner {
+  height: 1rem;
+  width: 1rem;
+  border-radius: 9999px;
+  border: 2px solid rgba(0, 196, 205, 0.25);
+  border-top-color: var(--astryd-cyan);
+  animation: astryd-spin 0.8s linear infinite;
+}
+@keyframes astryd-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Alert strips (login errors / notices) */
+.astryd-alert-danger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--astryd-radius-sm);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  background: rgba(248, 113, 113, 0.08);
+  padding: 0.625rem 0.75rem;
+  font-size: 12px;
+  color: var(--astryd-danger);
+}
+
+/* Table chrome */
+.astryd-th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--astryd-text-dim);
+}
+.astryd-row {
+  border-bottom: 1px solid var(--astryd-divider);
+  transition: background-color 0.15s;
+}
+.astryd-row:hover {
+  background: var(--astryd-hover);
+}
+
+/* Scrollbars (Astryd: 6px, pill thumb) — admin only */
+.admin-shell ::-webkit-scrollbar,
+.admin-shell::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.admin-shell ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.admin-shell ::-webkit-scrollbar-thumb {
+  background: var(--astryd-border-strong);
+  border-radius: 9999px;
+}
+.admin-shell ::-webkit-scrollbar-thumb:hover {
+  background: var(--astryd-text-dim);
+}
+
+/* ------------------------------------------------------------
+   Remaps for existing admin markup
+   ------------------------------------------------------------ */
+
+/* Headings: Astryd uses 600, never 700+, for UI text. */
+.admin-shell .font-bold {
+  font-weight: 600;
+}
+.admin-shell h1,
+.admin-shell h2,
+.admin-shell h3 {
+  letter-spacing: -0.01em;
+}
+
+/* Radii: 10 (controls) / 12 / 16 (cards) */
+.admin-shell .rounded-lg { border-radius: 8px; }
+.admin-shell .rounded-xl { border-radius: var(--astryd-radius-sm); }
+.admin-shell .rounded-2xl,
+.admin-shell .rounded-3xl { border-radius: var(--astryd-radius-lg); }
+
+/* Opacity-modified theme colours don't generate CSS under the Tailwind CDN build, so spell them out. */
+.admin-shell .border-outline-variant\/10,
+.admin-shell .border-outline-variant\/15 { border-color: var(--astryd-divider); }
+.admin-shell .border-outline-variant\/20,
+.admin-shell .border-outline-variant\/25,
+.admin-shell .border-outline-variant\/30 { border-color: var(--astryd-card-stroke); }
+.admin-shell .border-outline-variant\/40,
+.admin-shell .border-outline-variant\/50 { border-color: var(--astryd-border-strong); }
+.admin-shell .divide-outline-variant\/10 > :not([hidden]) ~ :not([hidden]) { border-color: var(--astryd-divider); }
+.admin-shell .ring-outline-variant\/40 { --tw-ring-color: var(--astryd-border-strong); }
+.admin-shell .bg-outline-variant\/15 { background-color: var(--astryd-divider); }
+.admin-shell .bg-outline-variant\/30,
+.admin-shell .bg-outline-variant\/40,
+.admin-shell .bg-outline-variant\/50 { background-color: var(--astryd-progress-track); }
+
+.admin-shell .bg-primary\/5,
+.admin-shell .hover\:bg-primary\/5:hover { background-color: rgba(0, 196, 205, 0.05); }
+.admin-shell .bg-primary\/10,
+.admin-shell .hover\:bg-primary\/10:hover { background-color: rgba(0, 196, 205, 0.1); }
+.admin-shell .border-primary\/20 { border-color: rgba(0, 196, 205, 0.2); }
+.admin-shell .hover\:border-primary\/40:hover { border-color: rgba(0, 196, 205, 0.4); }
+.admin-shell .hover\:border-primary\/50:hover { border-color: rgba(0, 196, 205, 0.5); }
+.admin-shell .hover\:ring-primary\/30:hover,
+.admin-shell .focus\:ring-primary\/30:focus { --tw-ring-color: rgba(0, 196, 205, 0.3); }
+.admin-shell .focus\:ring-primary\/10:focus { --tw-ring-color: rgba(0, 196, 205, 0.15); }
+.admin-shell .shadow-primary\/20,
+.admin-shell .shadow-indigo-900\/20 { --tw-shadow-color: transparent; box-shadow: none; }
+
+.admin-shell .bg-surface-container-low\/40,
+.admin-shell .bg-surface-container-low\/50 { background-color: var(--astryd-hover); }
+.admin-shell .bg-surface-container-low\/60,
+.admin-shell .bg-surface-container-low\/70,
+.admin-shell .bg-surface-container-low\/80 { background-color: var(--color-surface-container-low); }
+.admin-shell .hover\:bg-surface-container-low\/50:hover,
+.admin-shell .hover\:bg-surface-container-low\/60:hover { background-color: var(--astryd-hover); }
+.admin-shell .bg-surface\/95 { background-color: var(--color-surface); }
+.admin-shell .hover\:bg-error-container\/40:hover { background-color: rgba(248, 113, 113, 0.12); }
+.admin-shell .text-secondary\/60,
+.admin-shell .text-secondary\/70,
+.admin-shell .text-secondary\/80,
+.admin-shell .placeholder\:text-secondary\/70::placeholder { color: var(--astryd-text-dim); }
+.admin-shell .placeholder\:text-secondary::placeholder { color: var(--astryd-text-dim); }
+
+/* Solid primary buttons/tiles -> Astryd's cyan-tinted action style */
+.admin-shell .bg-primary.text-on-primary {
+  background-color: rgba(0, 196, 205, 0.12);
+  border: 1px solid rgba(0, 196, 205, 0.25);
+  color: var(--astryd-cyan);
+  font-weight: 500;
+  box-shadow: none;
+}
+.admin-shell .bg-primary.text-on-primary:hover:not(:disabled) {
+  background-color: rgba(0, 196, 205, 0.18);
+  color: var(--astryd-cyan);
+}
+.admin-shell .bg-primary.text-on-primary.rounded-full:not([class*=' h-']):not([class^='h-']) {
+  border-radius: var(--astryd-radius-sm);
+}
+.admin-shell .hover\:bg-primary:hover.hover\:text-on-primary:hover {
+  background-color: rgba(0, 196, 205, 0.18);
+  color: var(--astryd-cyan);
+}
+.admin-shell .text-primary { color: var(--astryd-cyan); }
+.admin-shell .hover\:text-primary-container:hover { color: var(--astryd-cyan-light); }
+.admin-shell .bg-error.text-on-error {
+  background-color: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  color: var(--astryd-danger);
+  font-weight: 500;
+}
+.admin-shell .bg-error.text-on-error:hover:not(:disabled) {
+  background-color: rgba(248, 113, 113, 0.18);
+  opacity: 1;
+}
+.admin-shell .bg-on-surface.text-surface {
+  background-color: var(--astryd-card-fill);
+  border: 1px solid var(--astryd-border-strong);
+  color: var(--astryd-text-strong);
+}
+.admin-shell .text-error { color: var(--astryd-danger); }
+.admin-shell .hover\:text-error:hover { color: var(--astryd-danger); }
+.admin-shell .accent-primary { accent-color: var(--astryd-cyan); }
+
+/* Native controls follow the theme */
+.admin-shell select option { background: var(--color-surface); color: var(--color-on-surface); }
+.admin-shell input[type='search']::-webkit-search-cancel-button { filter: grayscale(1); opacity: 0.6; }
+
+/* Plain white fills become card fills */
+.admin-shell .bg-white { background-color: var(--astryd-card-fill); }
+.admin-shell .text-white\/80,
+.admin-shell .text-white\/75,
+.admin-shell .text-white\/70,
+.admin-shell .text-white\/60 { color: var(--astryd-text-muted); }
+
+/* Gradient promo tiles (old indigo) -> Astryd cyan card */
+.admin-shell .bg-gradient-to-br.from-white { background: var(--astryd-card-fill); }
+
+/* ------------------------------------------------------------
+   Status hues: translucent tints in both themes
+   ------------------------------------------------------------ */
+.admin-shell .bg-emerald-50, .admin-shell .bg-green-100, .admin-shell .bg-green-50 { background-color: rgba(52, 211, 153, 0.12); }
+.admin-shell .bg-amber-50, .admin-shell .bg-amber-100, .admin-shell .bg-yellow-50 { background-color: rgba(245, 158, 11, 0.12); }
+.admin-shell .bg-rose-50, .admin-shell .bg-red-50, .admin-shell .bg-red-100 { background-color: rgba(248, 113, 113, 0.12); }
+.admin-shell .bg-sky-50, .admin-shell .bg-blue-50, .admin-shell .bg-indigo-50 { background-color: rgba(0, 196, 205, 0.1); }
+.admin-shell .bg-violet-50, .admin-shell .bg-purple-50 { background-color: rgba(139, 92, 246, 0.12); }
+.admin-shell .bg-slate-50, .admin-shell .bg-slate-100 { background-color: var(--astryd-hover); }
+
+.admin-shell .border-emerald-200, .admin-shell .border-green-300 { border-color: rgba(52, 211, 153, 0.3); }
+.admin-shell .border-amber-200, .admin-shell .border-amber-300 { border-color: rgba(245, 158, 11, 0.32); }
+.admin-shell .border-rose-200, .admin-shell .border-red-400 { border-color: rgba(248, 113, 113, 0.32); }
+.admin-shell .border-sky-200 { border-color: rgba(0, 196, 205, 0.3); }
+.admin-shell .border-violet-200 { border-color: rgba(139, 92, 246, 0.3); }
+.admin-shell .border-slate-200 { border-color: var(--astryd-divider); }
+.admin-shell .border-slate-800 { border-color: var(--astryd-border-strong); }
+
+.admin-shell .text-emerald-700, .admin-shell .text-green-800, .admin-shell .text-emerald-500 { color: #059669; }
+.admin-shell .text-amber-700, .admin-shell .text-amber-800 { color: #b45309; }
+.admin-shell .text-rose-700, .admin-shell .text-rose-600, .admin-shell .text-red-600, .admin-shell .text-rose-500, .admin-shell .text-rose-400, .admin-shell .hover\:text-rose-800:hover { color: #dc2626; }
+.admin-shell .text-sky-700, .admin-shell .text-sky-600 { color: #0e7490; }
+.admin-shell .text-violet-700, .admin-shell .text-violet-600 { color: #6d28d9; }
+.admin-shell .text-slate-700 { color: var(--astryd-text-muted); }
+
+.dark .admin-shell .text-emerald-700, .dark .admin-shell .text-green-800, .dark .admin-shell .text-emerald-500 { color: var(--astryd-success); }
+.dark .admin-shell .text-amber-700, .dark .admin-shell .text-amber-800 { color: var(--astryd-warning); }
+.dark .admin-shell .text-rose-700, .dark .admin-shell .text-rose-600, .dark .admin-shell .text-red-600, .dark .admin-shell .text-rose-500, .dark .admin-shell .text-rose-400, .dark .admin-shell .hover\:text-rose-800:hover { color: var(--astryd-danger); }
+.dark .admin-shell .text-sky-700, .dark .admin-shell .text-sky-600 { color: var(--astryd-cyan); }
+.dark .admin-shell .text-violet-700, .dark .admin-shell .text-violet-600 { color: #a78bfa; }
+
+/* Solid status dots keep their hue; slate tones follow the theme */
+.admin-shell .bg-slate-300 { background-color: var(--astryd-progress-track); }
+.admin-shell .hover\:bg-slate-400:hover { background-color: var(--astryd-border-strong); }
+.admin-shell .bg-slate-500 { background-color: var(--astryd-text-dim); }
+.admin-shell .bg-emerald-500 { background-color: var(--astryd-success); }
+.admin-shell .bg-amber-500 { background-color: var(--astryd-warning); }
+.admin-shell .bg-rose-500 { background-color: var(--astryd-danger); }
+.admin-shell .bg-sky-500 { background-color: var(--astryd-cyan); }
+
+/* Modal / drawer scrims */
+.admin-shell .bg-black\/50,
+.admin-shell .bg-black\/60 { background-color: var(--astryd-modal-overlay); }
+
+/* Collapsible nav group animation helper */
+.astryd-nav-collapse {
+  overflow: hidden;
+  transition: max-height 0.2s ease-in-out, opacity 0.2s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-shell *,
+  .admin-shell *::before,
+  .admin-shell *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Login card (AstryAi LoginPage: radius-lg, modal surface, shadow-xl, blur 10) */
+.astryd-auth-card {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 28rem;
+  padding: 1.5rem;
+  border-radius: var(--astryd-radius-lg);
+  border: 1px solid var(--astryd-card-stroke);
+  background: var(--astryd-modal-surface);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+.dark .astryd-auth-card {
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+}

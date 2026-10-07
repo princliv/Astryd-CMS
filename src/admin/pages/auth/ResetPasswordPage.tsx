@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { Lock } from 'lucide-react';
 import { http } from '../../../services/http';
+import { AuthField, AuthSubmit, authLinkClass } from '../../components/forms/AuthField';
 
 export function ResetPasswordPage() {
   const params = new URLSearchParams(window.location.search);
@@ -19,15 +21,16 @@ export function ResetPasswordPage() {
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Unable to use this link.'); }
     finally { setBusy(false); }
   };
-  return <form onSubmit={submit} className="space-y-4">
-    <p>{verify ? 'Verify your email before publishing your site.' : 'Set a new password. Links expire after one hour.'}</p>
+  return <form onSubmit={submit} className="space-y-5">
+    <p className="text-[13px] astryd-text-muted">{verify ? 'Verify your email before publishing your site.' : 'Set a new password. Links expire after one hour.'}</p>
     {!verify && !done && <>
-      <label className="block">Password<input type="password" required minLength={10} maxLength={128} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-xl border px-3 py-2" /></label>
-      <label className="block">Confirm password<input type="password" required value={confirmation} onChange={(e) => setConfirmation(e.target.value)} className="w-full rounded-xl border px-3 py-2" /></label>
-      <p className="text-xs">At least 10 characters, including letters and numbers.</p>
+      <AuthField label="Password" icon={Lock} required type="password" minLength={10} maxLength={128} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+      <AuthField label="Confirm password" icon={Lock} required type="password" value={confirmation} onChange={(e) => setConfirmation(e.target.value)} placeholder="••••••••" hint="At least 10 characters, including letters and numbers." />
     </>}
-    {message && <p role="status">{message}</p>}
-    {!done && <button disabled={busy || !params.get('token')} className="w-full rounded-full bg-primary text-on-primary py-3">{busy ? 'Please wait…' : verify ? 'Verify email' : 'Set password'}</button>}
-    <Link to="/login">Back to Sign In</Link>
+    {message && <p role="status" className="text-[12px] astryd-text-muted">{message}</p>}
+    {!done && <AuthSubmit busy={busy} busyLabel="Please wait…" disabled={!params.get('token')}>{verify ? 'Verify email' : 'Set password'}</AuthSubmit>}
+    <div className="text-center">
+      <Link to="/login" className={`text-[13px] ${authLinkClass}`}>Back to Sign In</Link>
+    </div>
   </form>;
 }

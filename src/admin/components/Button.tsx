@@ -12,16 +12,17 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
 }
 
+/** Astryd action styles: primary is the cyan-tinted action button, outline the neutral card button. */
 const VARIANT_CLASSES: Record<Variant, string> = {
-  primary: 'bg-primary text-on-primary font-bold hover:bg-primary-container shadow-sm disabled:opacity-50',
-  outline: 'border border-outline-variant/40 text-on-surface font-medium hover:bg-surface-container-high disabled:opacity-40',
-  ghost: 'text-secondary font-medium hover:bg-surface-container-high hover:text-on-surface disabled:opacity-40',
-  danger: 'bg-error text-on-error font-bold hover:opacity-90 disabled:opacity-50',
+  primary: 'astryd-btn',
+  outline: 'astryd-btn astryd-btn-neutral',
+  ghost: 'astryd-btn astryd-btn-ghost',
+  danger: 'astryd-btn astryd-btn-danger',
 };
 
 const SIZE_CLASSES: Record<Size, string> = {
-  sm: 'px-3 py-1.5 text-xs gap-1.5',
-  md: 'px-4 py-2.5 text-sm gap-2',
+  sm: 'h-8 px-3 text-xs gap-1.5',
+  md: 'h-9 px-3.5 text-[13px] gap-2',
 };
 
 export function Button({
@@ -37,7 +38,7 @@ export function Button({
   return (
     <button
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center rounded-xl transition-colors whitespace-nowrap ${VARIANT_CLASSES[variant]} ${SIZE_CLASSES[size]} ${className}`}
+      className={`${VARIANT_CLASSES[variant]} ${SIZE_CLASSES[size]} ${className}`}
       {...rest}
     >
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : Icon ? <Icon className="h-4 w-4" /> : null}

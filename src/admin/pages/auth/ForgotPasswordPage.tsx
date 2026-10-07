@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { Building2, Mail, MailCheck } from 'lucide-react';
 import { forgotPassword } from '../../../services/auth';
+import { AuthError, AuthField, AuthSubmit, authLinkClass } from '../../components/forms/AuthField';
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -18,10 +20,12 @@ export function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <div className="text-center space-y-4">
-        <span className="material-symbols-outlined text-4xl text-primary">mark_email_read</span>
-        <p className="text-sm text-secondary">If that email exists, a reset link has been sent.</p>
-        <Link to="/login" className="text-sm text-primary font-medium hover:underline">
+      <div className="space-y-4 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[rgba(0,196,205,0.12)]">
+          <MailCheck className="h-6 w-6 astryd-text-cyan" />
+        </div>
+        <p className="text-[13px] astryd-text-muted">If that email exists, a reset link has been sent.</p>
+        <Link to="/login" className={`text-[13px] ${authLinkClass}`}>
           Back to Sign In
         </Link>
       </div>
@@ -30,24 +34,13 @@ export function ForgotPasswordPage() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <p className="text-sm text-secondary">Enter your email and we'll send you a reset link.</p>
-      <label className="block text-sm">Organization ID<input required value={orgId} onChange={(e) => setOrgId(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border" /></label>
-      {error && <p role="alert">{error}</p>}
-      <div>
-        <label className="block text-sm font-semibold text-on-surface mb-1.5">Email</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="w-full px-3 py-2.5 text-sm rounded-xl border border-outline-variant/40 bg-surface-container-low focus:border-primary outline-none"
-        />
-      </div>
-      <button type="submit" className="w-full py-3 rounded-full bg-primary text-on-primary font-bold text-sm hover:bg-primary-container transition-colors shadow-md shadow-primary/20">
-        Send Reset Link
-      </button>
+      <p className="text-[13px] astryd-text-muted">Enter your email and we'll send you a reset link.</p>
+      {error && <AuthError>{error}</AuthError>}
+      <AuthField label="Organization ID" icon={Building2} required value={orgId} onChange={(e) => setOrgId(e.target.value)} />
+      <AuthField label="Email" icon={Mail} required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" />
+      <AuthSubmit>Send reset link</AuthSubmit>
       <div className="text-center">
-        <Link to="/login" className="text-sm text-primary font-medium hover:underline">
+        <Link to="/login" className={`text-[13px] ${authLinkClass}`}>
           Back to Sign In
         </Link>
       </div>
