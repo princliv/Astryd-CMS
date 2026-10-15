@@ -376,7 +376,7 @@ export function buildSeed(): MockDbShape {
     items.length >= 4
       ? [
           buildOrder({
-            id: 'order_1', orderNumber: '1042', status: 'pending', service: 'pickup',
+            id: 'order_1', orderNumber: '1042', status: 'paid', service: 'pickup',
             customerName: 'Sarah Chen', customerPhone: '+44 7700 900001', customerEmail: 'sarah.chen@example.com',
             items: [buildOrderItem(items[0], 2), buildOrderItem(items[2], 1)],
             placedMinutesAgo: 3,

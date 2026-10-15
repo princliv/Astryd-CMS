@@ -21,6 +21,8 @@ export interface Reservation extends Tenant, Timestamps {
   paymentId?: string;
   depositAmountCents?: number;
   currency?: string;
+  /** Set on Org-wide ("All locations") lists; `restaurantId` is the outlet the booking belongs to. */
+  siteName?: string;
 }
 
 export interface ReservationTimeSlot {

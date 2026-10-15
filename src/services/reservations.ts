@@ -220,6 +220,7 @@ interface AdminReservationResponse {
   depositAmountCents?: number;
   deposit_amount_cents?: number;
   currency?: string;
+  siteName?: string;
 }
 
 interface AdminReservationListResponse {
@@ -289,11 +290,18 @@ function mapAdminReservation(reservation: AdminReservationResponse): Reservation
     paymentId: reservation.paymentId ?? reservation.payment_id,
     depositAmountCents: reservation.depositAmountCents ?? reservation.deposit_amount_cents,
     currency: reservation.currency,
+    siteName: reservation.siteName,
   };
 }
 
 export async function getReservations(siteId?: string): Promise<Reservation[]> {
   const response = await http.get<AdminReservationListResponse>(`/admin/reservations?limit=100${siteId ? `&siteId=${encodeURIComponent(siteId)}` : ''}`);
+  return response.reservations.map(mapAdminReservation);
+}
+
+/** Every outlet of the Org the caller can access - the "All locations" view. */
+export async function getOrgReservations(organizationId: string): Promise<Reservation[]> {
+  const response = await http.get<AdminReservationListResponse>(`/organizations/${organizationId}/reservations?limit=100`);
   return response.reservations.map(mapAdminReservation);
 }
 
