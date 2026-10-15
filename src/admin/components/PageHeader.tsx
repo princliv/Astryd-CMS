@@ -4,7 +4,7 @@ import type { LucideIcon } from 'lucide-react';
 /**
  * Keeps a page's title block pinned to the top of the admin scroll area while the content scrolls
  * underneath. Sticks below a PublishBar when the page has one (it publishes its height as
- * `--sticky-offset` on the page root). Frosted `astryd-sticky` fill so the page gradient reads through.
+ * `--sticky-offset` on the page root). Solid `astryd-sticky` fill so scrolled content never shows through.
  */
 export function StickyHeader({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);

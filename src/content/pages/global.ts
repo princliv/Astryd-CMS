@@ -181,6 +181,20 @@ export const globalContent: ContentPageDefinition = {
       ],
     },
     {
+      id: 'locations',
+      title: 'Locations',
+      description: 'The location switcher in the header and the Locations page - shown only when your business has more than one location.',
+      fields: [
+        { key: 'locationSwitcherLabel', label: 'Header switcher heading', type: 'text' },
+        { key: 'locationsViewAll', label: 'Switcher link to all locations', type: 'text' },
+        { key: 'locationsTitle', label: 'Locations page heading', type: 'text' },
+        { key: 'locationsIntro', label: 'Locations page introduction', type: 'textarea' },
+        { key: 'locationsCurrent', label: 'Current location badge', type: 'text' },
+        { key: 'locationsVisit', label: 'Visit button', type: 'text' },
+        { key: 'locationsDirections', label: 'Directions link', type: 'text' },
+      ],
+    },
+    {
       id: 'scroll-top',
       title: 'Back-to-top button',
       advanced: true,
@@ -188,6 +202,14 @@ export const globalContent: ContentPageDefinition = {
     },
   ],
   defaults: {
+    // Locations
+    locationSwitcherLabel: 'Change location',
+    locationsViewAll: 'View all locations',
+    locationsTitle: 'Our locations',
+    locationsIntro: 'Book a table or order from the location nearest you.',
+    locationsCurrent: 'You are here',
+    locationsVisit: 'Visit',
+    locationsDirections: 'Directions',
     // Header
     navHomeLabel: 'Discover',
     cartAriaLabel: 'Open cart',

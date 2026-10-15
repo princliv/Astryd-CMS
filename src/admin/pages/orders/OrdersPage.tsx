@@ -11,6 +11,8 @@ import { Modal } from '../../components/Modal';
 import { Button } from '../../components/Button';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { DataTable } from '../../components/DataTable';
+import { OutletSelect } from '../../components/OutletSelect';
+import { useLocationScope } from '../../hooks/useLocationScope';
 import {
   BOARD_COLUMNS,
   NEXT_ACTION_LABEL,
@@ -32,7 +34,8 @@ function toMonthInputValue(d: Date) {
 }
 
 export function OrdersPage() {
-  const { data: orders, isLoading } = useOrders();
+  const scope = useLocationScope();
+  const { data: orders, isLoading } = useOrders(scope.allLocations);
   const updateStatus = useUpdateOrderStatus();
 
   const [tab, setTab] = useState<Tab>('active');
@@ -68,11 +71,11 @@ export function OrdersPage() {
 
   const handleAdvance = (order: Order) => {
     const next = NEXT_STATUS[order.status];
-    if (next) updateStatus.mutate({ orderId: order.id, status: next });
+    if (next) updateStatus.mutate({ orderId: order.id, status: next, siteId: order.restaurantId });
   };
 
   const handleConfirmCancel = () => {
-    if (pendingCancel) updateStatus.mutate({ orderId: pendingCancel.id, status: 'cancelled' });
+    if (pendingCancel) updateStatus.mutate({ orderId: pendingCancel.id, status: 'cancelled', siteId: pendingCancel.restaurantId });
     setPendingCancel(null);
     setSelectedId(null);
   };
@@ -82,6 +85,7 @@ export function OrdersPage() {
       icon={ShoppingBag}
       title="Orders"
       description="Track incoming orders from placement through to completion."
+      actions={<OutletSelect allLocations={{ selected: scope.allLocations, onChange: scope.setAllLocations }} />}
     />
   );
 
@@ -268,6 +272,7 @@ export function OrdersPage() {
                 header: 'Placed',
                 render: (o) => <span className="text-secondary">{new Date(o.placedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span>,
               },
+              ...(scope.allLocations ? [{ header: 'Location', render: (o: Order) => <span className="text-secondary">{o.siteName}</span> }] : []),
               { header: 'Customer', render: (o) => o.customerName },
               { header: 'Service', render: (o) => <span className="capitalize text-secondary">{o.service}</span> },
               { header: 'Status', render: (o) => <OrderStatusBadge status={o.status} /> },
@@ -310,6 +315,7 @@ export function OrdersPage() {
                 <span className="capitalize">{selectedOrder.service}</span>
               </span>
               <span className="font-semibold text-on-surface">{selectedOrder.customerName}</span>
+              {selectedOrder.siteName && <span className="ml-auto truncate">{selectedOrder.siteName}</span>}
             </div>
 
             <div className="space-y-1.5 text-sm text-secondary">

@@ -43,7 +43,7 @@
   --astryd-switch-off-hover: #afbdcf;
   --astryd-modal-surface: rgba(255, 255, 255, 0.92);
   --astryd-modal-overlay: rgba(15, 37, 64, 0.25);
-  --astryd-header-fill: rgba(238, 243, 250, 0.82);
+  --astryd-header-fill: #eef3fa;
 
   /* Text */
   --astryd-text-strong: #111827;
@@ -83,7 +83,7 @@
   --astryd-switch-off-hover: rgba(143, 168, 200, 0.4);
   --astryd-modal-surface: rgba(143, 168, 200, 0.3);
   --astryd-modal-overlay: rgba(0, 0, 0, 0.4);
-  --astryd-header-fill: rgba(8, 18, 33, 0.7);
+  --astryd-header-fill: #081221;
 
   --astryd-text-strong: #ffffff;
   --astryd-text-bright: #e8f0f8;
@@ -284,10 +284,9 @@ html:has(.admin-shell) body {
   background: rgba(15, 30, 53, 0.97);
   box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
 }
+/* Solid, so content scrolling underneath a stuck page header or publish bar never shows through. */
 .astryd-sticky {
   background: var(--astryd-header-fill);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 
 .astryd-divider {

@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import { db, nextId, nowIso } from '../db';
-import { userFromAuthHeader } from './auth';
+import { canAccessSite, orgOperationsScope, userFromAuthHeader } from './auth';
 import type { ReservationAvailabilitySettings, ReservationDayAvailability } from '../../types';
 
 const WEEK_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
@@ -50,11 +50,19 @@ const toDisplay = (hhmm: string) => {
 };
 
 /**
- * The admin reservation endpoints carry no site id (the real backend infers the business from the session),
- * so scope them to the signed-in user's own Site instead of whichever Site happens to be first in the DB.
+ * The admin reservation endpoints take an optional `?siteId=` (the outlet picked in the admin's site switcher),
+ * honoured when the caller may access that Site; without it they fall back to the signed-in user's own Site
+ * instead of whichever Site happens to be first in the DB. `null` means the requested Site is off-limits (403).
  */
-function siteForCaller(request: Request): string {
-  return userFromAuthHeader(request)?.restaurantId ?? Object.keys(db.data.reservationAvailability)[0];
+function siteForCaller(request: Request): string | null {
+  const caller = userFromAuthHeader(request);
+  const requested = new URL(request.url).searchParams.get('siteId');
+  if (requested) return canAccessSite(caller, requested) ? requested : null;
+  return caller?.restaurantId ?? Object.keys(db.data.reservationAvailability)[0];
+}
+
+function siteAccessDenied() {
+  return HttpResponse.json({ error: 'forbidden', message: 'Restaurant access denied' }, { status: 403 });
 }
 
 function toAdminReservation(r: (typeof db.data.reservations)[number]) {
@@ -211,8 +219,10 @@ export const reservationHandlers = [
     return HttpResponse.json(reservation);
   }),
 
+
   http.get('*/api/v1/admin/reservations', ({ request }) => {
     const siteId = siteForCaller(request);
+    if (!siteId) return siteAccessDenied();
     const limit = Number(new URL(request.url).searchParams.get('limit') ?? 100);
     const rows = db.data.reservations
       .filter((r) => r.restaurantId === siteId)
@@ -220,9 +230,35 @@ export const reservationHandlers = [
     return HttpResponse.json({ reservations: rows.slice(0, limit).map(toAdminReservation), total: rows.length, page: 1, limit, pages: Math.max(1, Math.ceil(rows.length / limit)) });
   }),
 
+  /** Every outlet of the Org the caller can access - the "All locations" view; `?siteId=` narrows it to one outlet. */
+  http.get('*/api/v1/organizations/:orgId/reservations', ({ params, request }) => {
+    const scope = orgOperationsScope(request, params.orgId as string);
+    if ('failure' in scope) return scope.failure;
+    const url = new URL(request.url);
+    const page = Math.max(1, Number(url.searchParams.get('page') ?? 1) || 1);
+    const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit') ?? 20) || 20));
+    const date = url.searchParams.get('date');
+    const status = url.searchParams.get('status');
+    const rows = db.data.reservations
+      .filter((r) => scope.siteIds.includes(r.restaurantId))
+      .filter((r) => (!date || r.date === date) && (!status || r.status === status))
+      .sort((a, b) => new Date(b.placedAt).getTime() - new Date(a.placedAt).getTime());
+    return HttpResponse.json({
+      reservations: rows
+        .slice((page - 1) * limit, page * limit)
+        .map((r) => ({ ...toAdminReservation(r), siteId: r.restaurantId, siteName: scope.names.get(r.restaurantId) ?? '' })),
+      total: rows.length,
+      page,
+      limit,
+      pages: Math.ceil(rows.length / limit),
+    });
+  }),
+
   http.patch('*/api/v1/admin/reservations/:id/status', async ({ params, request }) => {
+    const siteId = siteForCaller(request);
+    if (!siteId) return siteAccessDenied();
     const { status } = (await request.json()) as { status: (typeof db.data.reservations)[number]['status'] };
-    const reservation = db.data.reservations.find((r) => r.id === params.id && r.restaurantId === siteForCaller(request));
+    const reservation = db.data.reservations.find((r) => r.id === params.id && r.restaurantId === siteId);
     if (!reservation) return HttpResponse.json({ error: 'not_found', message: 'Reservation not found.' }, { status: 404 });
     reservation.status = status;
     reservation.updatedAt = nowIso();
@@ -232,6 +268,7 @@ export const reservationHandlers = [
 
   http.get('*/api/v1/admin/reservation-availability', ({ request }) => {
     const restaurantId = siteForCaller(request);
+    if (!restaurantId) return siteAccessDenied();
     const settings = db.data.reservationAvailability[restaurantId];
     if (!settings) {
       return HttpResponse.json({ error: { code: 'not_found', message: 'Availability settings not found.' } }, { status: 404 });
@@ -241,6 +278,7 @@ export const reservationHandlers = [
 
   http.put('*/api/v1/admin/reservation-availability', async ({ request }) => {
     const restaurantId = siteForCaller(request);
+    if (!restaurantId) return siteAccessDenied();
     const body = (await request.json()) as MockAvailabilityPayload;
     const settings: ReservationAvailabilitySettings = {
       restaurantId,
@@ -251,7 +289,7 @@ export const reservationHandlers = [
         closeTime: hours.close_time,
         slotDurationMins: hours.slot_duration_mins,
         maxPerSlot: hours.max_per_slot,
-        slots: db.data.reservationAvailability[restaurantId].days[hours.day_of_week]?.slots.map((slot) => ({
+        slots: db.data.reservationAvailability[restaurantId]?.days[hours.day_of_week]?.slots.map((slot) => ({
           ...slot,
           isOpen: !hours.disabled_slots.includes(slot.time),
         })) ?? [],

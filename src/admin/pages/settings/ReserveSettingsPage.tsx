@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MapPin, Plus } from 'lucide-react';
+import { MapPin, Plus, Save } from 'lucide-react';
 import { useRestaurant } from '../../../context/RestaurantContext';
 import { getReserveSettings, saveReserveSettings } from '../../../services/reserve';
 import type { ReserveSettings } from '../../../services/reserve';
@@ -63,9 +63,14 @@ export function ReserveSettingsPage() {
   const update = (patch: Partial<ReserveSettings>) => setDraft({ ...draft, ...patch });
   const seatingEnabled = supportsSeating(draft.vertical);
   const coordinate = (field: 'latitude' | 'longitude', value: string) => update({ location: { latitude: draft.location?.latitude ?? 0, longitude: draft.location?.longitude ?? 0, source: 'owner', [field]: Number(value) } });
-  return <div className="max-w-5xl space-y-6">
-    <PageHeader icon={MapPin} title="Astryd Reserve" description="Manage this business’s map location and booking timing." />
-    <form onSubmit={(event) => {
+  return <div className="space-y-6">
+    <PageHeader
+      icon={MapPin}
+      title="Astryd Reserve"
+      description="Manage this business’s map location and booking timing."
+      actions={<Button type="submit" form="reserve-settings-form" variant="primary" icon={Save} loading={save.isPending}>Save Reserve settings</Button>}
+    />
+    <form id="reserve-settings-form" onSubmit={(event) => {
       event.preventDefault();
       const { booking_duration_mins, slot_interval_mins, seating_areas, tables, ...location } = draft;
       const settings = seatingEnabled ? { ...location, seating_areas, tables } : location;
@@ -116,7 +121,6 @@ export function ReserveSettingsPage() {
         <Button type="button" disabled={!draft.seating_areas.length} onClick={() => update({ tables: [...draft.tables, { name: `Table ${draft.tables.length + 1}`, capacity: 2, seating_type: draft.seating_areas[0].id, is_active: true }] })}><Plus size={16} /> Add table</Button>
       </section></>}
       {save.error && <p role="alert" className="text-sm text-red-600">{save.error.message}</p>}
-      <Button type="submit" variant="primary" loading={save.isPending}>Save Reserve settings</Button>
     </form>
   </div>;
 }

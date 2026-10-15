@@ -27,6 +27,7 @@ import { HoursPage } from './pages/restaurant/HoursPage';
 import { SocialMediaPage } from './pages/restaurant/SocialMediaPage';
 import { AccountPage } from './pages/settings/AccountPage';
 import { UsersPage } from './pages/settings/UsersPage';
+import { LocationsPage } from './pages/settings/LocationsPage';
 import { DomainsPage } from './pages/settings/DomainsPage';
 import { WebsiteSyncPage } from './pages/settings/WebsiteSyncPage';
 import { ReserveSettingsPage } from './pages/settings/ReserveSettingsPage';
@@ -95,6 +96,7 @@ export function AdminRoutes() {
           {/* Account is the one screen every role reaches - it's the signed-in user's own profile, not a Site's. */}
           <Route path="settings/account" element={<AccountPage />} />
           <Route element={<RequireRole allow={['owner']} />}>
+            <Route path="settings/locations" element={<LocationsPage />} />
             <Route path="settings/users" element={<UsersPage />} />
             <Route path="settings/website-sync" element={<WebsiteSyncPage />} />
             <Route path="settings/reserve" element={<ReserveSettingsPage />} />
