@@ -6,6 +6,7 @@
 import type {
   Addon,
   BrandSettings,
+  MediaAsset,
   DomainMapping,
   Homepage,
   HomepageSection,
@@ -29,23 +30,45 @@ import type {
   WeekDay,
 } from '../types';
 import type { MockDbShape, Versioned } from './db';
-import type { StarterSectionCopy } from './seed';
 
 export const FRANCHISE_ORGANIZATION_ID = 'org_emberoak';
 export const FRANCHISE_ORGANIZATION_CODE = 'EMBEROAK';
 export const FRANCHISE_OWNER_EMAIL = 'owner@emberoak.com';
 
-export interface FranchiseImages {
-  burger: string;
-  pizza: string;
-  wings: string;
-  steak: string;
-  pasta: string;
-  dessert: string;
-  starter: string;
-}
+/** Unsplash photos (checked to load and to show their subject), like the other vertical demos use. */
+const photo = (id: string, w = 1200) => `https://images.unsplash.com/${id}?w=${w}&q=80&auto=format&fit=crop`;
+const EMBER_IMAGES = {
+  burger: photo('photo-1568901346375-23c9450c58cd'),
+  pizza: photo('photo-1513104890138-7c749659a591'),
+  wings: photo('photo-1567620832903-9fc6debc209f'),
+  burrata: photo('photo-1504674900247-0877df9cc836'),
+  ribeye: photo('photo-1600891964092-4316c288032e'),
+  pasta: photo('photo-1621996346565-e3dbc646d9a9'),
+  dessert: photo('photo-1565958011703-44f9829ba187'),
+  tomahawk: photo('photo-1558030006-450675393462'),
+  brisket: photo('photo-1544025162-d76694265947'),
+  chicken: photo('photo-1606728035253-49e8a23146de'),
+  grill: photo('photo-1529193591184-b1d58069ecdd', 1600),
+  chef: photo('photo-1556910103-1c02745aae4d', 800),
+  diningSoho: photo('photo-1517248135467-4c7edcad34c4', 1920),
+  barWilliamsburg: photo('photo-1514933651103-005eec06c04b', 1920),
+  diningHoboken: photo('photo-1552566626-52f8b828add9', 1920),
+  hall: photo('photo-1555396273-367ea4eb4db5', 1600),
+  stairsBar: photo('photo-1590846406792-0adc7f938f1d', 1600),
+  sharing: photo('photo-1466978913421-dad2ebd01d17', 1600),
+  terrace: photo('photo-1559339352-11d035aa65de', 1600),
+  smokedWings: photo('photo-1527477396000-e27163b481c2', 1600),
+};
+type ImageKey = keyof typeof EMBER_IMAGES;
 
-type BuildStarterSections = (siteId: string, now: string, hero: HomepageSection | null, copy: StarterSectionCopy) => HomepageSection[];
+const GALLERY: Array<[ImageKey, string]> = [
+  ['hall', 'The main room - open kitchen, oak-fired grill and long communal tables.'],
+  ['grill', 'Everything meets the fire: oak embers, cast iron and smoke.'],
+  ['sharing', 'Plates made for the middle of the table.'],
+  ['stairsBar', 'The bar, pouring house cocktails until late.'],
+  ['smokedWings', 'Oak-smoked wings, straight off the grill.'],
+  ['terrace', 'Outdoor seating when the weather allows.'],
+];
 
 interface OutletDef {
   id: string;
@@ -56,9 +79,11 @@ interface OutletDef {
   phone: string;
   email: string;
   tagline: string;
+  heroImage: ImageKey;
+  aboutImage: ImageKey;
   /** Added to every shared dish's base price - outlets price for their own market. */
   priceDelta: number;
-  exclusive: { name: string; description: string; price: number; category: string; image: keyof FranchiseImages };
+  exclusive: { name: string; description: string; price: number; category: string; image: ImageKey };
   offer: { name: string; discountValue: number; type: Offer['type']; cta: string };
   hours: { weekday: [string, string]; friSat: [string, string]; sunday: [string, string] };
   guests: Array<[string, string]>;
@@ -74,8 +99,10 @@ const OUTLETS: OutletDef[] = [
     phone: '+1 (212) 555-0181',
     email: 'soho@emberoak.com',
     tagline: 'The flagship wood-fire grill in SoHo',
+    heroImage: 'diningSoho',
+    aboutImage: 'grill',
     priceDelta: 2,
-    exclusive: { name: 'Spring Street Tomahawk (1kg)', description: 'Dry-aged 45 days, carved tableside over oak embers - built for two.', price: 128, category: 'Steaks', image: 'steak' },
+    exclusive: { name: 'Spring Street Tomahawk (1kg)', description: 'Dry-aged 45 days, carved tableside over oak embers - built for two.', price: 128, category: 'Steaks', image: 'tomahawk' },
     offer: { name: 'Weekday Lunch Prix Fixe', discountValue: 15, type: 'percentage', cta: 'Book Lunch' },
     hours: { weekday: ['11:30', '23:00'], friSat: ['11:30', '00:00'], sunday: ['11:00', '22:00'] },
     guests: [['Hannah Brooks', 'hannah.b@example.com'], ['Leo Martinez', 'leo.m@example.com'], ['Grace Kim', 'grace.k@example.com'], ['Samuel Ortiz', 'samuel.o@example.com']],
@@ -89,8 +116,10 @@ const OUTLETS: OutletDef[] = [
     phone: '+1 (718) 555-0142',
     email: 'williamsburg@emberoak.com',
     tagline: 'Brooklyn smokehouse and rooftop bar',
+    heroImage: 'barWilliamsburg',
+    aboutImage: 'brisket',
     priceDelta: 0,
-    exclusive: { name: 'Kent Ave Smoked Brisket', description: '14-hour post-oak brisket, pickled onions, burnt-end beans and Texas toast.', price: 32, category: 'Mains', image: 'burger' },
+    exclusive: { name: 'Kent Ave Smoked Brisket', description: '14-hour post-oak brisket, pickled onions, burnt-end beans and Texas toast.', price: 32, category: 'Mains', image: 'brisket' },
     offer: { name: 'Rooftop Happy Hour', discountValue: 25, type: 'percentage', cta: 'Order Now' },
     hours: { weekday: ['12:00', '23:00'], friSat: ['12:00', '01:00'], sunday: ['11:00', '22:00'] },
     guests: [['Nia Thompson', 'nia.t@example.com'], ['Ethan Cole', 'ethan.c@example.com'], ['Maya Patel', 'maya.p@example.com'], ['Lucas Wright', 'lucas.w@example.com']],
@@ -104,20 +133,22 @@ const OUTLETS: OutletDef[] = [
     phone: '+1 (201) 555-0117',
     email: 'hoboken@emberoak.com',
     tagline: 'Family wood-fire grill on Washington Street',
+    heroImage: 'diningHoboken',
+    aboutImage: 'chicken',
     priceDelta: -1,
-    exclusive: { name: 'Hoboken Hot Honey Chicken', description: 'Brick-pressed half chicken, Calabrian hot honey and charred lemon.', price: 27, category: 'Mains', image: 'wings' },
+    exclusive: { name: 'Hoboken Hot Honey Chicken', description: 'Brick-pressed half chicken, Calabrian hot honey and charred lemon.', price: 27, category: 'Mains', image: 'chicken' },
     offer: { name: 'Family Sunday Feast', discountValue: 10, type: 'fixed', cta: 'Reserve a Table' },
     hours: { weekday: ['11:30', '22:00'], friSat: ['11:30', '23:00'], sunday: ['11:00', '21:00'] },
     guests: [['Olivia Russo', 'olivia.r@example.com'], ['Noah Bennett', 'noah.b@example.com'], ['Ava Sullivan', 'ava.s@example.com'], ['Jack Moreno', 'jack.m@example.com']],
   },
 ];
 
-const SHARED_DISHES: Array<{ key: string; name: string; description: string; price: number; category: string; image: keyof FranchiseImages; featured?: boolean; veg?: boolean }> = [
+const SHARED_DISHES: Array<{ key: string; name: string; description: string; price: number; category: string; image: ImageKey; featured?: boolean; veg?: boolean }> = [
   { key: 'ember-burger', name: 'Ember Smash Burger', description: 'Two oak-grilled patties, aged cheddar, charred onion jam and house pickles on a potato bun.', price: 19, category: 'Burgers', image: 'burger', featured: true },
   { key: 'wood-fire-margherita', name: 'Wood-Fired Margherita', description: '48-hour dough, San Marzano tomato, fior di latte and basil, blistered at 900°F.', price: 18, category: 'Pizza', image: 'pizza', veg: true },
   { key: 'smoked-wings', name: 'Oak-Smoked Wings', description: 'Smoked then charred, tossed in maple-chipotle glaze, with blue cheese dip.', price: 16, category: 'Starters', image: 'wings', featured: true },
-  { key: 'burrata', name: 'Ember Burrata', description: 'Grilled stone fruit, burrata, hazelnut dukkah and aged balsamic.', price: 17, category: 'Starters', image: 'starter', veg: true },
-  { key: 'ribeye', name: 'Oak-Grilled Ribeye (14oz)', description: 'Prime ribeye over oak embers, bone-marrow butter and smoked salt.', price: 54, category: 'Steaks', image: 'steak', featured: true },
+  { key: 'burrata', name: 'Ember Burrata', description: 'Grilled stone fruit, burrata, hazelnut dukkah and aged balsamic.', price: 17, category: 'Starters', image: 'burrata', veg: true },
+  { key: 'ribeye', name: 'Oak-Grilled Ribeye (14oz)', description: 'Prime ribeye over oak embers, bone-marrow butter and smoked salt.', price: 54, category: 'Steaks', image: 'ribeye', featured: true },
   { key: 'mushroom-pasta', name: 'Charred Mushroom Rigatoni', description: 'Fire-roasted wild mushrooms, brown butter, sage and parmesan.', price: 24, category: 'Mains', image: 'pasta', veg: true },
   { key: 'skillet-cookie', name: 'Cast-Iron Skillet Cookie', description: 'Baked to order in the wood oven, with smoked-salt caramel and vanilla ice cream.', price: 12, category: 'Desserts', image: 'dessert', veg: true },
 ];
@@ -131,7 +162,7 @@ const isoDate = (daysFromToday: number) => {
   return d.toISOString().slice(0, 10);
 };
 
-export function buildFranchiseSeed(now: string, images: FranchiseImages, buildStarterSections: BuildStarterSections): Partial<MockDbShape> & {
+export function buildFranchiseSeed(now: string): Partial<MockDbShape> & {
   organizations: Organization[];
   users: User[];
   restaurants: Restaurant[];
@@ -165,6 +196,7 @@ export function buildFranchiseSeed(now: string, images: FranchiseImages, buildSt
   const reservations: Reservation[] = [];
   const pageConfigs: PageConfig[] = [];
   const domainMappings: DomainMapping[] = [];
+  const media: MediaAsset[] = [];
 
   OUTLETS.forEach((o, outletIndex) => {
     const hoursFor = (day: WeekDay): [string, string] => (day === 'fri' || day === 'sat' ? o.hours.friSat : day === 'sun' ? o.hours.sunday : o.hours.weekday);
@@ -182,7 +214,8 @@ export function buildFranchiseSeed(now: string, images: FranchiseImages, buildSt
       borderRadius: 'lg',
       navPosition: 'right',
       socialLinks: { instagram: 'https://instagram.com/emberandoak', facebook: '', whatsapp: '' },
-      contact: { phone: o.phone, email: o.email, address: formatAddress(o.address) },
+      // Street, neighbourhood, state - the homepage shows the neighbourhood from this line.
+      contact: { phone: o.phone, email: o.email, address: `${o.address.line1}, ${o.neighbourhood.split(',')[0]}, ${o.address.region} ${o.address.postalCode}` },
       description: `Ember & Oak ${o.neighbourhood} - wood-fire cooking, local produce and a menu that changes with what comes off the grill. One of three Ember & Oak locations.`,
       cuisineType: 'Wood-Fire Grill',
       businessHours: WEEK_DAYS.map((day) => ({ day, isClosed: false, openTime: hoursFor(day)[0], closeTime: hoursFor(day)[1] })),
@@ -197,40 +230,29 @@ export function buildFranchiseSeed(now: string, images: FranchiseImages, buildSt
       createdAt: now, updatedAt: now,
     };
 
-    const hero: HomepageSection = {
-      id: `section_${o.id}_hero`, restaurantId: o.id, type: 'hero', order: 1, visible: true, templateVariant: 'a', updatedAt: now,
-      content: {
-        eyebrow: o.neighbourhood,
-        heading: 'Ember & Oak',
-        description: `${o.tagline}. Cooked over live oak fire, every night.`,
-        buttonText: 'Reserve a Table', buttonLink: '#/reservations',
-        secondaryButtonText: 'Order Online', secondaryButtonLink: '#/menu',
-        backgroundMediaId: null, overlayOpacity: 50,
-      },
-    };
-    const sections = buildStarterSections(o.id, now, hero, {
-      heroHeading: 'Ember & Oak',
-      heroDescription: o.tagline,
-      aboutEyebrow: 'Our fire',
-      aboutHeading: `Ember & Oak ${o.neighbourhood.split(',')[0]}`,
-      aboutDescription: 'Everything on the menu meets the oak fire - from the smash burger to the tomahawk. Three neighbourhoods, one grill, the same obsession with smoke and char.',
-      featuredHeading: 'From the grill',
-      galleryHeading: 'Inside Ember & Oak',
-      offersHeading: 'This week',
-      testimonialsHeading: 'What our guests say',
-      testimonials: [[o.guests[0][0], 'The ribeye was perfect and the room has such a warm, buzzy feel.'], [o.guests[1][0], 'Best smash burger in the city - we keep coming back.']],
-    });
-    homepage[o.id] = {
-      draft: { restaurantId: o.id, status: 'draft', sections: sections.map((s) => ({ ...s })) },
-      published: { restaurantId: o.id, status: 'published', sections },
-    };
-
     reservationAvailability[o.id] = {
       restaurantId: o.id,
       days: WEEK_DAYS.map((day) => ({ day, isClosed: false, openTime: hoursFor(day)[0], closeTime: hoursFor(day)[1] === '00:00' || hoursFor(day)[1] === '01:00' ? '23:30' : hoursFor(day)[1], slotDurationMins: 30, maxPerSlot: 6, slots: [] })),
       blockedDates: [],
     };
-    pageContent[o.id] = { draft: {}, published: {} };
+    // The homepage info cards describe this outlet, not the platform's fine-dining defaults.
+    const landing = {
+      locationFallback: o.neighbourhood,
+      openStatus: 'Open today',
+      card1Rows: [
+        { id: 'r1', label: 'Outdoor Seating', value: outletIndex === 1 ? 'Rooftop bar' : 'Patio' },
+        { id: 'r2', label: 'Private Dining', value: 'Up to 12 guests' },
+        { id: 'r3', label: 'Wheelchair Access', value: 'Fully accessible' },
+        { id: 'r4', label: 'Kids', value: outletIndex === 2 ? 'Kids menu & high chairs' : 'Welcome' },
+      ],
+      card2Rows: [
+        { id: 'r1', label: 'Cuisine', value: 'Wood-fire grill' },
+        { id: 'r2', label: 'Dress Code', value: 'Casual' },
+        { id: 'r3', label: 'Payment', value: 'All major cards' },
+        { id: 'r4', label: 'Walk-ins', value: 'Bar seats held nightly' },
+      ],
+    };
+    pageContent[o.id] = { draft: { landing }, published: { landing } };
 
     const catId = (name: string) => `cat_${o.id}_${name.toLowerCase()}`;
     CATEGORIES.forEach((name, displayOrder) => {
@@ -253,7 +275,7 @@ export function buildFranchiseSeed(now: string, images: FranchiseImages, buildSt
       description: dish.description,
       price: dish.key === 'exclusive' ? dish.price : dish.price + o.priceDelta,
       imageMediaId: null,
-      imageUrl: images[dish.image],
+      imageUrl: EMBER_IMAGES[dish.image],
       foodType: dish.veg ? 'veg' : 'non_veg',
       tags: dish.key === 'exclusive' ? [`Only at ${o.neighbourhood.split(',')[0]}`] : dish.featured ? ['Signature'] : [],
       prepTimeMinutes: 15,
@@ -276,6 +298,73 @@ export function buildFranchiseSeed(now: string, images: FranchiseImages, buildSt
       startDate: now, endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 45).toISOString(), isActive: true,
       appliesToItemIds: [outletItems[0].id], appliesToCategoryIds: [], cta: o.offer.cta, createdAt: now, updatedAt: now,
     });
+
+    // Each outlet keeps its own media library; the photos are shared, the hero and story are local.
+    const mediaId = (key: string) => `media_${o.id}_${key}`;
+    const addMedia = (key: string, image: ImageKey, altText: string) =>
+      media.push({ id: mediaId(key), restaurantId: o.id, fileUrl: EMBER_IMAGES[image], fileType: 'image', mimeType: 'image/jpeg', fileName: `${key}.jpg`, fileSizeBytes: 0, altText, folder: 'images', createdAt: now, updatedAt: now });
+    addMedia('hero', o.heroImage, `Ember & Oak ${o.neighbourhood}`);
+    addMedia('about', o.aboutImage, 'Cooking over the oak fire');
+    addMedia('chef', 'chef', 'Chef Theo Marsh in the kitchen');
+    GALLERY.forEach(([image, caption], n) => addMedia(`gallery_${n}`, image, caption));
+
+    const area = o.neighbourhood.split(',')[0];
+    const base = { restaurantId: o.id, updatedAt: now, templateVariant: 'a' as const, visible: true };
+    const sections: HomepageSection[] = [
+      {
+        ...base, id: `section_${o.id}_hero`, type: 'hero', order: 1,
+        content: {
+          eyebrow: o.neighbourhood, heading: 'Ember & Oak', description: `${o.tagline}. Cooked over live oak fire, every night.`,
+          buttonText: 'Reserve a Table', buttonLink: '/reservations', secondaryButtonText: 'Order Online', secondaryButtonLink: '/menu',
+          backgroundMediaId: mediaId('hero'), overlayOpacity: 55,
+        },
+      },
+      {
+        ...base, id: `section_${o.id}_about`, type: 'about', order: 2,
+        content: {
+          eyebrow: 'Our fire',
+          heading: `Live fire, ${area} soul.`,
+          description: 'Everything on the menu meets the oak fire - from the smash burger to the tomahawk. Three neighbourhoods, one grill, the same obsession with smoke, char and generous plates.',
+          imageMediaId: mediaId('about'),
+          quote: 'Good wood, real fire and time - that is the whole recipe.',
+          chefName: 'Chef Theo Marsh',
+          chefQuote: 'We cook the way people have cooked for thousands of years: over embers, with patience. The oak does half the work.',
+          chefBio: 'Theo opened the first Ember & Oak in SoHo after a decade in Texas smokehouses and Basque grill kitchens. He still runs the fire in every new location for its first month.',
+          chefImageMediaId: mediaId('chef'),
+        },
+      },
+      {
+        ...base, id: `section_${o.id}_featured_menu`, type: 'featured_menu', order: 3,
+        content: {
+          eyebrow: 'From the grill', heading: 'Signature Dishes', description: `Our most-ordered plates at Ember & Oak ${area} - including one you will only find here.`,
+          selectedItemIds: [outletItems[0].id, outletItems[2].id, outletItems[4].id, outletItems[outletItems.length - 1].id],
+        },
+      },
+      {
+        ...base, id: `section_${o.id}_gallery`, type: 'gallery', order: 4,
+        content: { eyebrow: 'Inside', heading: `Ember & Oak ${area}`, description: 'Smoke, fire and a full room.', images: GALLERY.map(([, caption], n) => ({ mediaId: mediaId(`gallery_${n}`), caption, order: n })) },
+      },
+      {
+        ...base, id: `section_${o.id}_offers`, type: 'offers', order: 5,
+        content: { eyebrow: 'This week', heading: 'Offers', description: `What is on at Ember & Oak ${area}.`, selectedOfferIds: [`offer_${o.id}`] },
+      },
+      {
+        ...base, id: `section_${o.id}_testimonials`, type: 'testimonials', order: 6,
+        content: {
+          eyebrow: 'Guest stories', heading: 'What our guests say',
+          testimonials: [
+            { id: `testimonial_${o.id}_0`, customerName: o.guests[0][0], quote: 'The ribeye was perfect and the room has such a warm, buzzy feel.', rating: 5, order: 0 },
+            { id: `testimonial_${o.id}_1`, customerName: o.guests[1][0], quote: 'Best smash burger in the city - we keep coming back.', rating: 5, order: 1 },
+            { id: `testimonial_${o.id}_2`, customerName: o.guests[2][0], quote: `Booked the private room for a birthday - the ${area} team made it special.`, rating: 5, order: 2 },
+          ],
+        },
+      },
+      { ...base, id: `section_${o.id}_location`, type: 'location', order: 7, content: { heading: 'Find Us', showHoursTable: true } },
+    ];
+    homepage[o.id] = {
+      draft: { restaurantId: o.id, status: 'draft', sections: sections.map((section) => ({ ...section })) },
+      published: { restaurantId: o.id, status: 'published', sections },
+    };
 
     const line = (item: MenuItem, quantity: number, extra: Addon[] = []): OrderLineItem => {
       const unitPrice = item.price + extra.reduce((sum, a) => sum + a.price, 0);
@@ -332,7 +421,7 @@ export function buildFranchiseSeed(now: string, images: FranchiseImages, buildSt
   });
 
   return {
-    organizations, users, restaurants, brand, website, homepage, categories, items, addons, offers, orders, reservations,
+    organizations, users, restaurants, brand, website, homepage, media, categories, items, addons, offers, orders, reservations,
     reservationAvailability, pageConfigs, domainMappings, pageContent,
   };
 }
