@@ -15,3 +15,7 @@ Repeatable browser checks use an in-memory backend (no Atlas, actual payment or 
 3. Run `npm run test:booking` with Chrome installed, or set `PLAYWRIGHT_CHROMIUM_PATH` to an installed Chromium executable.
 
 The tests redirect API requests to the isolated fixture. Local demo defaults to email preview until a verified sending provider is configured.
+
+## Platform smoke tests
+
+`npm run test:platform` builds the app in mock mode (MSW, no backend needed) into `dist-platform-test/`, serves it on port 5176, and checks every login surface, every admin screen, role guards, the super-admin area, and all seeded tenant websites on desktop and mobile. It uses the installed Google Chrome; set `PLAYWRIGHT_CHROMIUM_PATH` to use another Chromium. The HTML report is written to `playwright-report/platform/`.

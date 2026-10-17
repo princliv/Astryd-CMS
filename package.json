@@ -13,7 +13,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "preview:production": "vite preview --host localhost --port 4173 --strictPort",
-    "test:booking": "playwright test"
+    "test:booking": "playwright test",
+    "test:platform": "playwright test -c playwright.platform.config.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
