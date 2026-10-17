@@ -1,3 +1,5 @@
+import { ConfirmationActions } from './ConfirmationActions';
+import type { PublicReservationConfirmation } from '../../types';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { ApiError } from "../../services/http";
@@ -118,6 +120,7 @@ export const BookingVariantA = ({
   const [termsAgreed, setTermsAgreed] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [confirmationCode, setConfirmationCode] = useState("");
+  const [confirmedBooking, setConfirmedBooking] = useState<PublicReservationConfirmation | null>(null);
   const [checkoutSession, setCheckoutSession] = useState<CheckoutSession | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [availability, setAvailability] = useState<PublicAvailability["slots"]>({ afternoon: [], evening: [] });
@@ -186,6 +189,7 @@ export const BookingVariantA = ({
         if (result.status === "succeeded" && result.fulfillmentStatus === "completed" && result.reservation) {
           window.clearInterval(timer);
           setConfirmationCode(result.reservation.confirmationCode);
+          setConfirmedBooking(result.reservation);
           setStep(5);
           onToast(cRef.current.text("a_toast_confirmed", { code: result.reservation.confirmationCode }));
         } else if (result.fulfillmentStatus === "action_required") {
@@ -277,6 +281,7 @@ export const BookingVariantA = ({
       setCheckoutSession(result);
       if (result.status === "succeeded" && result.fulfillmentStatus === "completed" && result.reservation) {
         setConfirmationCode(result.reservation.confirmationCode);
+          setConfirmedBooking(result.reservation);
         setStep(5);
         onToast(cRef.current.text("a_toast_confirmed", { code: result.reservation.confirmationCode }));
       } else if (result.fulfillmentStatus === "action_required") {
@@ -1220,114 +1225,10 @@ export const BookingVariantA = ({
                   </span>
                 </span>
               </div>
-              <p className="font-sans text-base md:text-lg text-secondary max-w-lg mx-auto leading-relaxed pt-2">
-                {c.text("a_success_sent_before")}{" "}
-                <span className="text-on-surface font-semibold">{email}</span>{" "}
-                {c.text("a_success_sent_and")}{" "}
-                <span className="text-on-surface font-semibold">{phone}</span>{c.text("a_success_sent_after")}
-              </p>
+              <p className="font-sans text-base md:text-lg text-secondary">Your booking details are ready below.</p>
             </div>
 
-            {/* Action Grid (Bento Style) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full mb-12 z-10 font-sans">
-              {/* Primary Action Card: Add to Calendar */}
-              <div className="col-span-1 md:col-span-2 bg-surface-container-lowest p-8 rounded-3xl border border-outline-variant/30 shadow-md flex flex-col md:flex-row items-center justify-between text-left group hover:-translate-y-1 transition-all duration-300">
-                <div className="mb-6 md:mb-0">
-                  <h3 className="font-serif text-xl font-bold text-on-surface mb-1">
-                    {c.text("a_calendar_heading")}
-                  </h3>
-                  <p className="font-sans text-sm text-secondary">
-                    {c.text("a_calendar_text")}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-3 justify-center md:justify-end font-sans">
-                  <button
-                    onClick={() => onToast(c.text("a_toast_apple"))}
-                    className="px-5 py-2.5 rounded-xl border border-outline-variant bg-surface hover:bg-surface-container-high transition-colors flex items-center gap-2 text-sm font-semibold text-on-surface"
-                  >
-                    <span className="material-symbols-outlined text-lg">
-                      event
-                    </span>{" "}
-                    {c.text("a_calendar_apple")}
-                  </button>
-                  <button
-                    onClick={() => onToast(c.text("a_toast_google"))}
-                    className="px-5 py-2.5 rounded-xl border border-outline-variant bg-surface hover:bg-surface-container-high transition-colors flex items-center gap-2 text-sm font-semibold text-on-surface"
-                  >
-                    <span className="material-symbols-outlined text-lg">
-                      event_available
-                    </span>{" "}
-                    {c.text("a_calendar_google")}
-                  </button>
-                  <button
-                    onClick={() => onToast(c.text("a_toast_outlook"))}
-                    className="px-5 py-2.5 rounded-xl border border-outline-variant bg-surface hover:bg-surface-container-high transition-colors flex items-center gap-2 text-sm font-semibold text-on-surface"
-                  >
-                    <span className="material-symbols-outlined text-lg">
-                      calendar_today
-                    </span>{" "}
-                    {c.text("a_calendar_outlook")}
-                  </button>
-                </div>
-              </div>
-
-              {/* Secondary Action: Modify Reservation */}
-              <button
-                onClick={() => setStep(1)}
-                className="p-6 rounded-3xl bg-surface-container-low border border-outline-variant/20 hover:border-primary/40 hover:bg-surface-container transition-all flex items-center justify-between group active:scale-[0.98] text-left"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-surface-container-highest flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors shrink-0">
-                    <span className="material-symbols-outlined text-2xl">
-                      edit_calendar
-                    </span>
-                  </div>
-                  <div>
-                    <span className="block font-sans text-base font-bold text-on-surface">
-                      {c.text("a_modify_title")}
-                    </span>
-                    <span className="block font-label-sm text-xs text-secondary">
-                      {c.text("a_modify_text")}
-                    </span>
-                  </div>
-                </div>
-                <span className="material-symbols-outlined text-secondary opacity-0 group-hover:opacity-100 transition-opacity text-sm">
-                  arrow_forward_ios
-                </span>
-              </button>
-
-              {/* Secondary Action: Cancel Reservation */}
-              <button
-                onClick={() => {
-                  if (
-                    window.confirm(c.text("a_cancel_confirm"))
-                  ) {
-                    onToast(c.text("a_toast_cancelled"));
-                    onNavigateLanding();
-                  }
-                }}
-                className="p-6 rounded-3xl bg-surface-container-low border border-outline-variant/20 hover:border-error/40 hover:bg-error-container/10 transition-all flex items-center justify-between group active:scale-[0.98] text-left"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-surface-container-highest flex items-center justify-center text-error group-hover:bg-error group-hover:text-on-error transition-colors shrink-0">
-                    <span className="material-symbols-outlined text-2xl">
-                      event_busy
-                    </span>
-                  </div>
-                  <div>
-                    <span className="block font-sans text-base font-bold text-on-surface">
-                      {c.text("a_cancel_title")}
-                    </span>
-                    <span className="block font-label-sm text-xs text-secondary">
-                      {c.text("a_cancel_text")}
-                    </span>
-                  </div>
-                </div>
-                <span className="material-symbols-outlined text-secondary opacity-0 group-hover:opacity-100 transition-opacity text-sm">
-                  arrow_forward_ios
-                </span>
-              </button>
-            </div>
+            {confirmedBooking && <ConfirmationActions confirmation={confirmedBooking} />}
 
             {/* Footer Back Button */}
             <button

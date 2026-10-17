@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   PanelsTopLeft,
@@ -41,7 +41,11 @@ import { BrandMark } from './BrandMark';
 
 /** Multi-Vertical Platform Plan §10.2 - only appears once an Org has more than one Site; a single-Site Org sees the plain brand mark, unchanged. */
 function SiteSwitcher() {
-  const { restaurantId, sites, setActiveSiteId } = useRestaurant();
+  const { restaurantId, sites: allSites, setActiveSiteId } = useRestaurant();
+  // Suspended outlets can't be operated on, so they're managed only from Settings → Locations.
+  const sites = allSites.filter((s) => s.status !== 'suspended');
+  const { flushDraft } = useDraftSave();
+  const { isOwner } = usePermissions();
   const [isOpen, setIsOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -73,14 +77,17 @@ function SiteSwitcher() {
 
       {isOpen && (
         <div className="astryd-dropdown absolute left-0 top-full z-50 mt-1 w-64 py-1.5">
-          <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] astryd-text-dim">Sites</div>
+          <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] astryd-text-dim">Locations</div>
           {sites.map((site) => (
             <button
               key={site.id}
               type="button"
-              onClick={() => {
-                setActiveSiteId(site.id);
+              onClick={async () => {
                 setIsOpen(false);
+                if (site.id === activeSite.id) return;
+                // Unsaved edits belong to the outlet they were made on - save them before switching away.
+                await flushDraft();
+                setActiveSiteId(site.id);
               }}
               className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] astryd-text-bright transition-colors hover:bg-[var(--astryd-hover)]"
             >
@@ -88,6 +95,15 @@ function SiteSwitcher() {
               {site.id === activeSite.id && <Check className="h-4 w-4 shrink-0 astryd-text-cyan" />}
             </button>
           ))}
+          {isOwner && (
+            <Link
+              to="/admin/settings/locations"
+              onClick={() => setIsOpen(false)}
+              className="mt-1 block border-t border-[var(--astryd-divider)] px-3 pt-2 pb-1 text-[12px] astryd-text-cyan hover:underline"
+            >
+              Manage locations
+            </Link>
+          )}
         </div>
       )}
     </div>
@@ -293,6 +309,7 @@ export function Sidebar() {
               items: [
                 { to: '/admin/settings/account', label: 'Account', icon: User },
                 ...(perms.canManageSettings && import.meta.env.VITE_USE_MOCKS === 'true' ? [{ to: '/admin/settings/domains', label: 'Domains', icon: Globe }] : []),
+                ...(perms.isOwner ? [{ to: '/admin/settings/locations', label: 'Locations', icon: Building2 }] : []),
                 ...(perms.canManageUsers ? [{ to: '/admin/settings/users', label: 'Users', icon: Users }] : []),
                 ...(perms.canManageSettings && import.meta.env.VITE_USE_MOCKS === 'false' ? [{ to: '/admin/settings/website-sync', label: 'Astryd Main sync', icon: Globe }] : []),
                 ...(perms.canManageUsers && import.meta.env.VITE_USE_MOCKS === 'false' ? [{ to: '/admin/settings/reserve', label: 'Astryd Reserve', icon: MapPin }] : []),
@@ -301,6 +318,7 @@ export function Sidebar() {
           ],
     [
       perms.isSuperAdmin,
+      perms.isOwner,
       perms.canManageWebsite,
       perms.canManageMenu,
       perms.canManageBranding,

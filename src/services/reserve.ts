@@ -1,6 +1,8 @@
 import { http } from './http';
 
 export interface ReserveSettings {
+  booking_email_policy?: string;
+  booking_email_note?: string;
   vertical: string;
   booking_template_variant: 'a' | 'b' | 'c';
   google_place_id: string | null;

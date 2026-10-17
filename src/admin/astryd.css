@@ -39,9 +39,11 @@
   --astryd-hover: rgba(15, 37, 64, 0.04);
   --astryd-input-fill: #ffffff;
   --astryd-progress-track: #e2eaf4;
+  --astryd-switch-off: #c3cfdd;
+  --astryd-switch-off-hover: #afbdcf;
   --astryd-modal-surface: rgba(255, 255, 255, 0.92);
   --astryd-modal-overlay: rgba(15, 37, 64, 0.25);
-  --astryd-header-fill: rgba(238, 243, 250, 0.82);
+  --astryd-header-fill: #eef3fa;
 
   /* Text */
   --astryd-text-strong: #111827;
@@ -77,9 +79,11 @@
   --astryd-hover: rgba(255, 255, 255, 0.04);
   --astryd-input-fill: rgba(255, 255, 255, 0.04);
   --astryd-progress-track: rgba(143, 168, 200, 0.15);
+  --astryd-switch-off: rgba(143, 168, 200, 0.3);
+  --astryd-switch-off-hover: rgba(143, 168, 200, 0.4);
   --astryd-modal-surface: rgba(143, 168, 200, 0.3);
   --astryd-modal-overlay: rgba(0, 0, 0, 0.4);
-  --astryd-header-fill: rgba(8, 18, 33, 0.7);
+  --astryd-header-fill: #081221;
 
   --astryd-text-strong: #ffffff;
   --astryd-text-bright: #e8f0f8;
@@ -280,10 +284,9 @@ html:has(.admin-shell) body {
   background: rgba(15, 30, 53, 0.97);
   box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
 }
+/* Solid, so content scrolling underneath a stuck page header or publish bar never shows through. */
 .astryd-sticky {
   background: var(--astryd-header-fill);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 
 .astryd-divider {
@@ -332,6 +335,23 @@ html:has(.admin-shell) body {
 .admin-shell .astryd-input:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Switch (ToggleField): own classes so the generic bg-white / bg-slate remaps below can't flatten track and knob */
+.admin-shell .astryd-switch {
+  background-color: var(--astryd-switch-off);
+  transition: background-color 0.15s;
+}
+.admin-shell .astryd-switch:hover:not(:disabled) {
+  background-color: var(--astryd-switch-off-hover);
+}
+.admin-shell .astryd-switch[aria-checked='true'],
+.admin-shell .astryd-switch[aria-checked='true']:hover:not(:disabled) {
+  background-color: var(--astryd-cyan);
+}
+.admin-shell .astryd-switch-knob {
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 37, 64, 0.3);
 }
 
 /* Primary action: cyan-tinted (login "Sign in", WorkforceActionButton) */

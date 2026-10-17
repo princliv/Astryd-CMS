@@ -25,6 +25,51 @@ function userFromAuthHeader(request: Request): User | undefined {
   return db.data.users.find((u) => u.id === userId);
 }
 
+/**
+ * Whether `user` may operate on `siteId` - the backend's `require_restaurant` rule: a non-suspended Site of
+ * the caller's own Org that is in their `siteAccess` ('all' = every Site). Super Admins reach any live Site.
+ */
+function canAccessSite(user: User | undefined, siteId: string): boolean {
+  const site = db.data.restaurants.find((r) => r.id === siteId);
+  if (!user || !site || site.status === 'suspended') return false;
+  if (user.role === 'super_admin') return true;
+  return site.organizationId === user.organizationId && (user.siteAccess === 'all' || user.siteAccess.includes(siteId));
+}
+
+/** Non-suspended Sites of one Org the caller may operate on (the backend's `accessible_site_ids`). */
+function accessibleSiteIds(user: User, organizationId: string): string[] {
+  return db.data.restaurants
+    .filter((r) => r.organizationId === organizationId && r.status !== 'suspended')
+    .filter((r) => user.role === 'super_admin' || user.siteAccess === 'all' || user.siteAccess.includes(r.id))
+    .map((r) => r.id);
+}
+
+/**
+ * Sites an Org-wide reservations/orders list may read (the backend's `org_operations_scope`): the caller's own
+ * Org only, its non-suspended Sites in their `siteAccess`; `?siteId=` narrows to one (403 when not accessible).
+ */
+function orgOperationsScope(
+  request: Request,
+  organizationId: string,
+): { siteIds: string[]; names: Map<string, string> } | { failure: Response } {
+  const user = userFromAuthHeader(request);
+  if (!user) return { failure: HttpResponse.json({ error: 'unauthorized', message: 'Not logged in.' }, { status: 401 }) };
+  const org = db.data.organizations.find((o) => o.id === organizationId);
+  if (!org || (user.role !== 'super_admin' && user.organizationId !== organizationId)) {
+    return { failure: HttpResponse.json({ error: 'forbidden', message: 'Organization access denied' }, { status: 403 }) };
+  }
+  let siteIds = accessibleSiteIds(user, organizationId);
+  const requested = new URL(request.url).searchParams.get('siteId');
+  if (requested) {
+    if (!siteIds.includes(requested)) {
+      return { failure: HttpResponse.json({ error: 'forbidden', message: 'Restaurant access denied' }, { status: 403 }) };
+    }
+    siteIds = [requested];
+  }
+  const names = new Map(db.data.restaurants.filter((r) => siteIds.includes(r.id)).map((r) => [r.id, r.name]));
+  return { siteIds, names };
+}
+
 export const authHandlers = [
   http.post('*/api/v1/auth/login', async ({ request }) => {
     const body = (await request.json()) as LoginRequest;
@@ -83,4 +128,4 @@ export const authHandlers = [
   }),
 ];
 
-export { userFromAuthHeader, issueToken };
+export { userFromAuthHeader, issueToken, canAccessSite, accessibleSiteIds, orgOperationsScope };

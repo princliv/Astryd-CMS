@@ -10,6 +10,7 @@ import { userHandlers } from './users';
 import { orderHandlers } from './orders';
 import { reservationHandlers } from './reservations';
 import { siteHandlers } from './sites';
+import { reserveHandlers } from './reserve';
 import { pageConfigHandlers } from './pageConfigs';
 import { membershipHandlers } from './membership';
 import { domainHandlers } from './domains';
@@ -29,6 +30,7 @@ export const handlers = [
   ...orderHandlers,
   ...reservationHandlers,
   ...siteHandlers,
+  ...reserveHandlers,
   ...pageConfigHandlers,
   ...membershipHandlers,
   ...domainHandlers,

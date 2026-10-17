@@ -12,19 +12,23 @@
     "production:local": "bash scripts/run-production-local.sh",
     "lint": "oxlint",
     "preview": "vite preview",
-    "preview:production": "vite preview --host localhost --port 4173 --strictPort"
+    "preview:production": "vite preview --host localhost --port 4173 --strictPort",
+    "test:booking": "playwright test"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@tanstack/react-query": "^5.102.8",
+    "leaflet": "^1.9.4",
     "lucide-react": "^1.46.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "@types/leaflet": "^1.9.12",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",

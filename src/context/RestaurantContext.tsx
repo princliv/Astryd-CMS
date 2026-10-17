@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './AuthContext';
 import { getSites } from '../services/sites';
@@ -83,17 +83,22 @@ export function AdminRestaurantProvider({ children }: { children: ReactNode }) {
     localStorage.getItem(ACTIVE_SITE_STORAGE_KEY),
   );
 
+  // A suspended outlet can't be operated on (the API answers 403), so it's never the active one.
+  const operable = useMemo(() => (sites ?? []).filter((s) => s.status !== 'suspended'), [sites]);
+
   useEffect(() => {
-    if (!sites || sites.length === 0) return;
-    if (activeSiteId && sites.some((s) => s.id === activeSiteId)) return;
-    const fallback = sites.find((s) => s.id === user?.restaurantId)?.id ?? sites[0].id;
+    if (operable.length === 0) return;
+    if (activeSiteId && operable.some((s) => s.id === activeSiteId)) return;
+    const fallback = operable.find((s) => s.id === user?.restaurantId)?.id ?? operable[0].id;
     setActiveSiteIdState(fallback);
     localStorage.setItem(ACTIVE_SITE_STORAGE_KEY, fallback);
-  }, [sites, activeSiteId, user?.restaurantId]);
+  }, [operable, activeSiteId, user?.restaurantId]);
 
   const setActiveSiteId = useCallback(
     (siteId: string) => {
-      if (!sites?.some((s) => s.id === siteId)) return;
+      // Read the cache rather than this render's `sites` so an outlet created a moment ago can be switched to.
+      const latest = queryClient.getQueryData<Restaurant[]>(['sites', organizationId]) ?? sites;
+      if (!latest?.some((s) => s.id === siteId && s.status !== 'suspended')) return;
       setActiveSiteIdState(siteId);
       localStorage.setItem(ACTIVE_SITE_STORAGE_KEY, siteId);
       // Every admin data hook keys its queries `['admin-<domain>', restaurantId, ...]` - re-scope them all in one go.
@@ -104,10 +109,10 @@ export function AdminRestaurantProvider({ children }: { children: ReactNode }) {
         },
       });
     },
-    [queryClient, sites],
+    [queryClient, sites, organizationId],
   );
 
-  const activeSite = sites?.find((s) => s.id === activeSiteId);
+  const activeSite = operable.find((s) => s.id === activeSiteId);
   useEffect(() => {
     document.title = activeSite?.name ? `${activeSite.name} | Admin` : 'Astryd | Admin';
   }, [activeSite?.name]);

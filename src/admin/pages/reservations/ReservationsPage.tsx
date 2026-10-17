@@ -1,3 +1,4 @@
+import { BookingEmailStatus } from './BookingEmailStatus';
 import { useEffect, useMemo, useState } from 'react';
 import { CalendarDays, Users, Mail, Phone, StickyNote, Settings2 } from 'lucide-react';
 import { useReservations, useUpdateReservationStatus, useReservationAvailability, useUpdateReservationAvailability } from '../../hooks/api/useReservations';
@@ -11,6 +12,8 @@ import { Button } from '../../components/Button';
 import { DataTable } from '../../components/DataTable';
 import { ReservationStatusBadge } from '../../components/ReservationStatusBadge';
 import { ToggleField } from '../../components/forms/ToggleField';
+import { OutletSelect } from '../../components/OutletSelect';
+import { useLocationScope } from '../../hooks/useLocationScope';
 import { WEEK_DAY_LABEL, WEEK_DAY_ORDER, formatTimeSlot } from './reservationMeta';
 import type { Reservation, ReservationBlockedDate, ReservationDayAvailability, ReservationStatus } from '../../../types';
 
@@ -46,8 +49,8 @@ function generateSlots(entry: ReservationDayAvailability): ReservationDayAvailab
 
 export function ReservationsPage() {
   const { restaurantId, sites } = useRestaurant();
-  const seatingEnabled = supportsSeating(sites.find((site) => site.id === restaurantId)?.vertical);
-  const { data: reservations, isLoading } = useReservations();
+  const scope = useLocationScope();
+  const { data: reservations, isLoading } = useReservations(scope.allLocations);
   const updateStatus = useUpdateReservationStatus();
   const { data: availability, isLoading: isAvailabilityLoading } = useReservationAvailability();
   const updateAvailability = useUpdateReservationAvailability();
@@ -75,6 +78,9 @@ export function ReservationsPage() {
   }, [availability]);
 
   const selectedReservation = reservations?.find((r) => r.id === selectedId) ?? null;
+  // Availability is configured per outlet, so it isn't offered in the "All locations" view.
+  const activeTab: Tab = scope.allLocations ? 'bookings' : tab;
+  const siteVertical = (siteId: string) => sites.find((site) => site.id === siteId)?.vertical;
 
   const filteredReservations = useMemo(() => {
     const all = [...(reservations ?? [])].sort((a, b) => new Date(b.placedAt).getTime() - new Date(a.placedAt).getTime());
@@ -124,6 +130,7 @@ export function ReservationsPage() {
       icon={CalendarDays}
       title="Reservations"
       description="Manage incoming bookings and control which time slots guests can book, day by day."
+      actions={<OutletSelect allLocations={{ selected: scope.allLocations, onChange: scope.setAllLocations }} />}
     />
   );
 
@@ -144,23 +151,25 @@ export function ReservationsPage() {
         <button
           onClick={() => setTab('bookings')}
           className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-            tab === 'bookings' ? 'bg-primary text-on-primary border-primary' : 'border-outline-variant/40 text-secondary hover:border-primary/40'
+            activeTab === 'bookings' ? 'bg-primary text-on-primary border-primary' : 'border-outline-variant/40 text-secondary hover:border-primary/40'
           }`}
         >
           Bookings
         </button>
-        <button
-          onClick={() => setTab('availability')}
-          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-            tab === 'availability' ? 'bg-primary text-on-primary border-primary' : 'border-outline-variant/40 text-secondary hover:border-primary/40'
-          }`}
-        >
-          <Settings2 className="h-3.5 w-3.5" />
-          Availability
-        </button>
+        {!scope.allLocations && (
+          <button
+            onClick={() => setTab('availability')}
+            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+              activeTab === 'availability' ? 'bg-primary text-on-primary border-primary' : 'border-outline-variant/40 text-secondary hover:border-primary/40'
+            }`}
+          >
+            <Settings2 className="h-3.5 w-3.5" />
+            Availability
+          </button>
+        )}
       </div>
 
-      {tab === 'bookings' ? (
+      {activeTab === 'bookings' ? (
         <div className="space-y-4">
           <div className="admin-card p-4 flex flex-wrap items-end gap-4">
             <div className="flex gap-2">
@@ -244,6 +253,7 @@ export function ReservationsPage() {
                   </button>
                 ),
               },
+              ...(scope.allLocations ? [{ header: 'Location', render: (r: Reservation) => <span className="text-secondary">{r.siteName}</span> }] : []),
               { header: 'Guest', render: (r) => r.guestName },
               {
                 header: 'Date & Time',
@@ -378,7 +388,7 @@ export function ReservationsPage() {
                   variant={s === 'cancelled' ? 'danger' : 'outline'}
                   size="sm"
                   loading={updateStatus.isPending && updateStatus.variables?.reservationId === selectedReservation.id && updateStatus.variables?.status === s}
-                  onClick={() => updateStatus.mutate({ reservationId: selectedReservation.id, status: s })}
+                  onClick={() => updateStatus.mutate({ reservationId: selectedReservation.id, status: s, siteId: selectedReservation.restaurantId })}
                 >
                   Mark {s === 'no_show' ? 'No Show' : s.charAt(0).toUpperCase() + s.slice(1)}
                 </Button>
@@ -388,16 +398,21 @@ export function ReservationsPage() {
         }
       >
         {selectedReservation && (
-          <ReservationDetail reservation={selectedReservation} seatingEnabled={seatingEnabled} />
+          <ReservationDetail
+            reservation={selectedReservation}
+            seatingEnabled={supportsSeating(siteVertical(selectedReservation.restaurantId || restaurantId))}
+            siteId={selectedReservation.restaurantId || restaurantId}
+          />
         )}
       </Modal>
     </div>
   );
 }
 
-function ReservationDetail({ reservation, seatingEnabled }: { reservation: Reservation; seatingEnabled: boolean }) {
+function ReservationDetail({ reservation, seatingEnabled, siteId }: { reservation: Reservation; seatingEnabled: boolean; siteId: string }) {
   return (
     <div className="space-y-5">
+      <BookingEmailStatus reservationId={reservation.id} siteId={siteId} />
       <div className="flex items-center justify-between">
         <span className="font-semibold text-on-surface">
           {new Date(reservation.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })} · {formatTimeSlot(reservation.timeSlot)}
@@ -432,6 +447,12 @@ function ReservationDetail({ reservation, seatingEnabled }: { reservation: Reser
         <span className="text-sm text-secondary font-normal">Guest</span>
         <span>{reservation.guestName}</span>
       </div>
+      {reservation.siteName && (
+        <div className="flex items-center justify-between font-semibold text-on-surface border-t border-outline-variant/10 pt-4">
+          <span className="text-sm text-secondary font-normal">Location</span>
+          <span>{reservation.siteName}</span>
+        </div>
+      )}
       {reservation.depositAmountCents != null && (
         <div className="flex items-center justify-between font-semibold text-on-surface border-t border-outline-variant/10 pt-4">
           <span className="text-sm text-secondary font-normal">Paid reservation deposit</span>

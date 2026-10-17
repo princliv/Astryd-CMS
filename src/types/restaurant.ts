@@ -208,6 +208,16 @@ export interface BrandSettings extends Tenant, Timestamps {
   businessHours: BusinessHoursEntry[];
 }
 
+/** A Site's (outlet's) street address - one Organization can run many outlets, each at its own address. */
+export interface SiteAddress {
+  line1: string;
+  line2?: string;
+  city: string;
+  region?: string;
+  postalCode: string;
+  country: string;
+}
+
 export interface Restaurant extends Timestamps {
   id: Id;
   /** Multi-Vertical Platform Plan §3.1: this row is "Site" - `organizationId` is the new tenant boundary above it. */
@@ -219,6 +229,7 @@ export interface Restaurant extends Timestamps {
   /** Plan §2/§6 - defaults-only, set once at onboarding; never used to gate features. */
   vertical: Vertical;
   domain?: string | null;
+  address?: SiteAddress | null;
   /** Multi-Vertical Platform Plan §5.2 - "Powered by Astryd" footer badge; Super Admin only, never editable via Org-owned brand/website settings. */
   brandingBadgeEnabled: boolean;
 }

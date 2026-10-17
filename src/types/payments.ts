@@ -15,6 +15,10 @@ export interface CheckoutSession {
   failure?: { code?: string; message?: string };
   order?: Order;
   reservation?: {
+    managementUrl?: string;
+    calendarUrl?: string;
+    googleCalendarUrl?: string;
+    emailStatus?: string;
     confirmationCode: string;
     date: string;
     timeSlot: string;

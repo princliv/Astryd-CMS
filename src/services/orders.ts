@@ -36,6 +36,7 @@ export interface OrderApiResponse {
   created_at: string;
   updated_at: string;
   status_updated_at: string;
+  site_name?: string;
 }
 
 interface OrderCheckoutResponse {
@@ -82,11 +83,18 @@ export function mapOrderResponse(order: OrderApiResponse): Order {
     createdAt: order.created_at,
     updatedAt: order.updated_at,
     statusUpdatedAt: order.status_updated_at,
+    siteName: order.site_name,
   };
 }
 
 export async function getOrders(restaurantId: string): Promise<Order[]> {
   const response = await http.get<OrderApiResponse[]>(`/orders/restaurant/${restaurantId}`);
+  return response.map(mapOrderResponse);
+}
+
+/** Every outlet of the Org the caller can access - the "All locations" view. */
+export async function getOrgOrders(organizationId: string): Promise<Order[]> {
+  const response = await http.get<OrderApiResponse[]>(`/organizations/${organizationId}/orders`);
   return response.map(mapOrderResponse);
 }
 

@@ -46,4 +46,6 @@ export interface Order extends Tenant, Timestamps {
   total: number;
   placedAt: ISODateString;
   statusUpdatedAt: ISODateString;
+  /** Set on Org-wide ("All locations") lists; `restaurantId` is the outlet the order belongs to. */
+  siteName?: string;
 }

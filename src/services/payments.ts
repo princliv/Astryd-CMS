@@ -14,6 +14,10 @@ interface PaymentResponse {
   fulfillment_status: CheckoutSession['fulfillmentStatus'];
   failure?: { code?: string; message?: string };
   reservation?: {
+    management_url?: string;
+    calendar_url?: string;
+    google_calendar_url?: string;
+    email_status?: string;
     confirmation_code: string;
     date: string;
     time_slot: string;
@@ -66,6 +70,10 @@ export function mapCheckoutSession(response: PaymentResponse, existingSecret = '
     reservation: response.reservation
       ? {
           confirmationCode: response.reservation.confirmation_code,
+          managementUrl: response.reservation.management_url,
+          calendarUrl: response.reservation.calendar_url,
+          googleCalendarUrl: response.reservation.google_calendar_url,
+          emailStatus: response.reservation.email_status,
           date: response.reservation.date,
           timeSlot: response.reservation.time_slot,
           timeDisplay: response.reservation.time_display,

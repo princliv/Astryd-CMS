@@ -7,6 +7,7 @@ import { CatalogView } from './components/catalog';
 import { OrderSummaryView } from './components/OrderSummaryView';
 import { BookingView } from './components/booking';
 import { MembershipView } from './components/membership';
+import { LocationsView } from './components/locations/LocationsView';
 import { ItemsView } from './components/items';
 import { LandingChrome } from './components/landing/LandingChrome';
 import { ScrollToTop } from './components/ScrollToTop';
@@ -34,13 +35,13 @@ import {
   updateCartLineNote,
 } from './data/menuItems';
 
-type AppPage = 'landing' | 'items' | 'menu' | 'reservations' | 'membership' | 'checkout';
+type AppPage = 'landing' | 'items' | 'menu' | 'reservations' | 'membership' | 'checkout' | 'locations';
 
 const CART_STORAGE_KEY = 'lumiere-cart';
 
 function pageFromHash(): AppPage {
   const raw = window.location.hash.replace(/^#\/?/, '').toLowerCase();
-  if (raw === 'items' || raw === 'menu' || raw === 'reservations' || raw === 'membership' || raw === 'checkout') {
+  if (raw === 'items' || raw === 'menu' || raw === 'reservations' || raw === 'membership' || raw === 'checkout' || raw === 'locations') {
     return raw;
   }
   return 'landing';
@@ -227,6 +228,24 @@ function AppShell() {
         <BookingView
           onNavigateLanding={() => setCurrentPage('landing')}
           onNavigateMenu={() => setCurrentPage('menu')}
+          onToast={triggerToast}
+          cartUniqueCount={cartUniqueCount}
+          onOpenCart={() => setIsCartOpen(true)}
+        />
+        {cartDrawer}
+        <ScrollToTop />
+        {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
+      </>
+    );
+  }
+
+  if (currentPage === 'locations') {
+    return (
+      <>
+        <LocationsView
+          onNavigateLanding={() => setCurrentPage('landing')}
+          onNavigateMenu={() => setCurrentPage('menu')}
+          onNavigateReservations={() => setCurrentPage('reservations')}
           onToast={triggerToast}
           cartUniqueCount={cartUniqueCount}
           onOpenCart={() => setIsCartOpen(true)}

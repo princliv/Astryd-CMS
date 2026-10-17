@@ -2,10 +2,14 @@ import { Outlet, useMatch } from 'react-router-dom';
 import { SidebarProvider } from '../context/SidebarContext';
 import { Sidebar } from '../components/Sidebar';
 import { AdminTopBar } from '../components/AdminTopBar';
+import { useRestaurant } from '../../context/RestaurantContext';
 
 function AdminLayoutContent() {
   // The Site Editor is a full-bleed workspace (edit panel + live preview), not a padded, width-capped page.
   const isFullBleed = Boolean(useMatch('/admin/website/pages/:page'));
+  // Switching outlet in the sidebar remounts the page, so no form or editor keeps the previous outlet's values
+  // (and can never save them onto the newly selected outlet).
+  const { restaurantId } = useRestaurant();
 
   return (
     <div className="astryd-bg relative h-screen flex font-sans overflow-hidden">
@@ -15,12 +19,12 @@ function AdminLayoutContent() {
         <AdminTopBar />
         {isFullBleed ? (
           <main className="flex-1 min-h-0 overflow-hidden">
-            <Outlet />
+            <Outlet key={restaurantId} />
           </main>
         ) : (
           <main className="flex-1 overflow-y-auto overflow-x-hidden">
             <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-              <Outlet />
+              <Outlet key={restaurantId} />
             </div>
           </main>
         )}

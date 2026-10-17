@@ -20,12 +20,10 @@ export function ToggleField({ label, checked, onChange, description, disabled }:
         aria-label={label || undefined}
         disabled={disabled}
         onClick={() => onChange(!checked)}
-        className={`relative w-11 h-6 rounded-full transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed ${
-          checked ? 'bg-primary' : 'bg-slate-300 hover:bg-slate-400'
-        }`}
+        className="astryd-switch relative w-11 h-6 rounded-full shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed"
       >
         <span
-          className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md ring-1 ring-black/5 transition-transform ${
+          className={`astryd-switch-knob absolute top-0.5 left-0.5 w-5 h-5 rounded-full transition-transform ${
             checked ? 'translate-x-5' : ''
           }`}
         />

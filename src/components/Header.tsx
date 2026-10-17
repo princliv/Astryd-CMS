@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { usePublicData } from '../context/PublicDataContext';
 import { usePageContent } from '../context/usePageContent';
+import { LocationSwitcher } from './locations/LocationSwitcher';
 
 interface HeaderProps {
-  currentPage: 'landing' | 'items' | 'menu' | 'reservations' | 'membership';
+  currentPage: 'landing' | 'items' | 'menu' | 'reservations' | 'membership' | 'locations';
   onNavigateLanding: () => void;
   onNavigateMenu: () => void;
   onNavigateReservations: () => void;
@@ -241,7 +242,13 @@ export const Header: React.FC<HeaderProps> = ({
     brandName,
     onNavigateLanding,
     navItems,
-    cartButton,
+    // The location switcher sits beside the cart in every layout (it renders nothing for a single-outlet business).
+    cartButton: (
+      <>
+        <LocationSwitcher />
+        {cartButton}
+      </>
+    ),
     headerStyle,
     navLinkInactiveClass,
     navPosition: brand?.navPosition ?? 'right',

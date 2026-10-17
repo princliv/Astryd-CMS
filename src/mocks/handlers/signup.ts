@@ -1,19 +1,8 @@
 import { http, HttpResponse } from 'msw';
 import { db, nextId, nowIso } from '../db';
 import { issueToken } from './auth';
-import { buildStarterSections } from '../seed';
-import { defaultTemplateVariant } from '../../data/onboardingDefaults';
-import type {
-  BrandSettings,
-  Homepage,
-  HomepageSection,
-  ReservationAvailabilitySettings,
-  SignupRequest,
-  User,
-  WeekDay,
-} from '../../types';
-
-const WEEK_DAYS: WeekDay[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+import { provisionSite } from '../provisionSite';
+import type { SignupRequest, User } from '../../types';
 
 function uniqueOrgCode(name: string): string {
   const base = name.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16) || 'ORG';
@@ -52,10 +41,20 @@ export const signupHandlers = [
     const now = nowIso();
     const orgId = nextId('org');
     const orgCode = uniqueOrgCode(organizationName);
-    const siteId = nextId('site');
     const userId = nextId('user');
 
     db.data.organizations.push({ id: orgId, code: orgCode, name: organizationName, createdAt: now, updatedAt: now });
+
+    const site = provisionSite({
+      organizationId: orgId,
+      ownerUserId: userId,
+      ownerEmail,
+      name: siteName,
+      slug,
+      vertical: body.vertical,
+      modules: body.modules,
+      branding: body.branding,
+    });
 
     const owner: User = {
       id: userId,
@@ -63,136 +62,13 @@ export const signupHandlers = [
       email: ownerEmail,
       name: ownerName,
       role: 'owner',
-      restaurantId: siteId,
+      restaurantId: site.id,
       siteAccess: 'all',
       isActive: true,
       createdAt: now,
       updatedAt: now,
     };
     db.data.users.push(owner);
-
-    db.data.restaurants.push({
-      id: siteId,
-      organizationId: orgId,
-      slug,
-      name: siteName,
-      ownerUserId: userId,
-      status: 'active',
-      vertical: body.vertical,
-      brandingBadgeEnabled: true,
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    db.data.pageConfigs.push(
-      ...body.modules.map((m, order) => ({
-        id: `pageconfig_${siteId}_${m.module}`,
-        restaurantId: siteId,
-        module: m.module,
-        enabled: m.enabled,
-        navLabel: m.navLabel,
-        order,
-        templateVariant: defaultTemplateVariant(body.vertical, m.module),
-        createdAt: now,
-        updatedAt: now,
-      })),
-    );
-
-    const brandSettings: BrandSettings = {
-      restaurantId: siteId,
-      restaurantName: siteName,
-      tagline: body.branding.tagline,
-      logoMediaId: null,
-      faviconMediaId: null,
-      themePresetId: body.branding.themePresetId,
-      primaryFont: 'Inter',
-      headingFont: 'Playfair Display',
-      fontWeight: 'regular',
-      buttonStyle: 'rounded',
-      borderRadius: 'md',
-      socialLinks: {},
-      contact: { phone: '', email: ownerEmail, address: '' },
-      description: body.branding.tagline,
-      cuisineType: '',
-      businessHours: WEEK_DAYS.map((day) => ({ day, isClosed: false, openTime: '09:00', closeTime: '18:00' })),
-      createdAt: now,
-      updatedAt: now,
-    };
-    db.data.brand[siteId] = { draft: brandSettings, published: brandSettings };
-
-    db.data.website[siteId] = {
-      restaurantId: siteId,
-      publishStatus: 'draft',
-      publishedAt: null,
-      seoTitle: siteName,
-      seoDescription: body.branding.tagline,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    const heroSection: HomepageSection = {
-      id: nextId('section'),
-      restaurantId: siteId,
-      type: 'hero',
-      order: 0,
-      visible: true,
-      templateVariant: 'a',
-      content: {
-        heading: siteName,
-        description: body.branding.tagline || 'Welcome to our new site - built in minutes.',
-        buttonText: 'Get Started',
-        buttonLink: '#/menu',
-        backgroundMediaId: null,
-        overlayOpacity: 40,
-      },
-      updatedAt: now,
-    };
-    const homepage: Homepage = {
-      restaurantId: siteId,
-      status: 'draft',
-      sections: buildStarterSections(siteId, now, heroSection, {
-        heroHeading: siteName,
-        heroDescription: '',
-        aboutEyebrow: 'Our Story',
-        aboutHeading: `About ${siteName}`,
-        aboutDescription: body.branding.tagline || 'Tell your customers what makes you different.',
-        featuredHeading: 'Featured',
-        galleryHeading: 'Gallery',
-        offersHeading: 'Special Offers',
-        testimonialsHeading: 'What People Say',
-        testimonials: [],
-      }),
-    };
-    db.data.homepage[siteId] = { draft: homepage, published: homepage };
-
-    db.data.domainMappings.push({
-      id: nextId('domain'),
-      restaurantId: siteId,
-      type: 'platform_subdomain',
-      hostname: `${slug}.ourplatform.com`,
-      recordType: 'CNAME',
-      recordName: '@',
-      recordValue: `${slug}.ourplatform.com`,
-      verificationStatus: 'verified',
-      sslStatus: 'issued',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    const availability: ReservationAvailabilitySettings = {
-      restaurantId: siteId,
-      days: WEEK_DAYS.map((day) => ({
-        day,
-        isClosed: false,
-        openTime: '09:00',
-        closeTime: '21:00',
-        slotDurationMins: 60,
-        maxPerSlot: 4,
-        slots: [],
-      })),
-      blockedDates: [],
-    };
-    db.data.reservationAvailability[siteId] = availability;
 
     db.save();
 

@@ -38,6 +38,7 @@ export function OrderCard({ order, now, isUpdating, onOpen, onAdvance, onCancel 
           <span>·</span>
           <span className="truncate">{order.customerName}</span>
         </div>
+        {order.siteName && <div className="mt-1 truncate text-xs font-semibold text-secondary">{order.siteName}</div>}
         <p className="text-sm text-on-surface mt-2 line-clamp-2">
           {itemSummary}
           {extraCount > 0 && <span className="text-secondary"> +{extraCount} more</span>}

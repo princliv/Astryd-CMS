@@ -20,6 +20,10 @@ interface PublicApiErrorResponse {
 
 interface PublicReservationResponse {
   success: boolean;
+  management_url?: string;
+  calendar_url?: string;
+  google_calendar_url?: string;
+  email_status?: string;
   confirmation_code: string;
   reservation: {
     date: string;
@@ -139,6 +143,10 @@ export async function createPublicReservation(
 
   return {
     confirmationCode: response.confirmation_code,
+    managementUrl: response.management_url,
+    calendarUrl: response.calendar_url,
+    googleCalendarUrl: response.google_calendar_url,
+    emailStatus: response.email_status,
     date: response.reservation.date,
     timeSlot: response.reservation.time_slot,
     timeDisplay: response.reservation.time_display,
@@ -212,6 +220,7 @@ interface AdminReservationResponse {
   depositAmountCents?: number;
   deposit_amount_cents?: number;
   currency?: string;
+  siteName?: string;
 }
 
 interface AdminReservationListResponse {
@@ -281,11 +290,18 @@ function mapAdminReservation(reservation: AdminReservationResponse): Reservation
     paymentId: reservation.paymentId ?? reservation.payment_id,
     depositAmountCents: reservation.depositAmountCents ?? reservation.deposit_amount_cents,
     currency: reservation.currency,
+    siteName: reservation.siteName,
   };
 }
 
 export async function getReservations(siteId?: string): Promise<Reservation[]> {
   const response = await http.get<AdminReservationListResponse>(`/admin/reservations?limit=100${siteId ? `&siteId=${encodeURIComponent(siteId)}` : ''}`);
+  return response.reservations.map(mapAdminReservation);
+}
+
+/** Every outlet of the Org the caller can access - the "All locations" view. */
+export async function getOrgReservations(organizationId: string): Promise<Reservation[]> {
+  const response = await http.get<AdminReservationListResponse>(`/organizations/${organizationId}/reservations?limit=100`);
   return response.reservations.map(mapAdminReservation);
 }
 

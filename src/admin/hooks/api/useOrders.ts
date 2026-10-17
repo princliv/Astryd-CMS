@@ -3,27 +3,27 @@ import { useRestaurant } from '../../../context/RestaurantContext';
 import * as orderService from '../../../services/orders';
 import type { OrderStatus } from '../../../types';
 
-export function useOrders() {
-  const { restaurantId } = useRestaurant();
+/** `allLocations` lists every outlet the user can access instead of just the active one. */
+export function useOrders(allLocations = false) {
+  const { restaurantId, organizationId } = useRestaurant();
   return useQuery({
-    queryKey: ['admin-orders', restaurantId],
-    queryFn: () => orderService.getOrders(restaurantId),
+    queryKey: allLocations ? ['admin-org-orders', organizationId] : ['admin-orders', restaurantId],
+    queryFn: () => (allLocations ? orderService.getOrgOrders(organizationId) : orderService.getOrders(restaurantId)),
     refetchInterval: 15000,
   });
 }
 
-function useInvalidateOrders() {
-  const { restaurantId } = useRestaurant();
-  const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: ['admin-orders', restaurantId] });
-}
-
 export function useUpdateOrderStatus() {
   const { restaurantId } = useRestaurant();
-  const invalidate = useInvalidateOrders();
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ orderId, status }: { orderId: string; status: OrderStatus }) =>
-      orderService.updateOrderStatus(restaurantId, orderId, status),
-    onSuccess: invalidate,
+    // `siteId` is the outlet the order belongs to - it differs from the active outlet in the "All locations" view.
+    mutationFn: ({ orderId, status, siteId }: { orderId: string; status: OrderStatus; siteId?: string }) =>
+      orderService.updateOrderStatus(siteId ?? restaurantId, orderId, status),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-orders'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-org-orders'] }),
+      ]),
   });
 }

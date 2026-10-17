@@ -1,3 +1,4 @@
+import { ConfirmationActions } from './ConfirmationActions';
 import { useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { getPublicAvailability, createPublicReservation, createReservationCheckout } from '../../services/reservations';
@@ -114,6 +115,7 @@ export const BookingVariantB = ({ onNavigateLanding, onNavigateMenu, onToast, ca
             })}
           </p>
           <p className="text-secondary text-sm mb-8">{c.text('b_success_code_label')} <span className="font-bold text-on-surface">{confirmation.confirmationCode}</span></p>
+          <ConfirmationActions confirmation={confirmation} />
           <button onClick={onNavigateLanding} className="px-8 py-3.5 bg-primary text-on-primary rounded-full font-semibold text-sm uppercase tracking-wide">
             {c.text('b_back_website')}
           </button>

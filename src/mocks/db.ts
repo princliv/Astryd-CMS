@@ -49,7 +49,7 @@ export interface MockDbShape {
   pageContent: Record<string, Versioned<PageContentMap>>;
 }
 
-const STORAGE_KEY = 'lumiere-cms-mock-db-v14';
+const STORAGE_KEY = 'lumiere-cms-mock-db-v15';
 
 function emptyDb(): MockDbShape {
   return {

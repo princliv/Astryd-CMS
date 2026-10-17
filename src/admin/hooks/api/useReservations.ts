@@ -3,28 +3,29 @@ import { useRestaurant } from '../../../context/RestaurantContext';
 import * as reservationService from '../../../services/reservations';
 import type { ReservationAvailabilitySettings, ReservationStatus } from '../../../types';
 
-export function useReservations() {
-  const { restaurantId } = useRestaurant();
+/** `allLocations` lists every outlet the user can access instead of just the active one. */
+export function useReservations(allLocations = false) {
+  const { restaurantId, organizationId } = useRestaurant();
   return useQuery({
-    queryKey: ['admin-reservations', restaurantId],
-    queryFn: () => reservationService.getReservations(restaurantId),
+    queryKey: allLocations ? ['admin-org-reservations', organizationId] : ['admin-reservations', restaurantId],
+    queryFn: () =>
+      allLocations ? reservationService.getOrgReservations(organizationId) : reservationService.getReservations(restaurantId),
     refetchInterval: 15000,
   });
 }
 
-function useInvalidateReservations() {
-  const { restaurantId } = useRestaurant();
-  const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: ['admin-reservations', restaurantId] });
-}
-
 export function useUpdateReservationStatus() {
   const { restaurantId } = useRestaurant();
-  const invalidate = useInvalidateReservations();
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ reservationId, status }: { reservationId: string; status: ReservationStatus }) =>
-      reservationService.updateReservationStatus(reservationId, status, restaurantId),
-    onSuccess: invalidate,
+    // `siteId` is the outlet the booking belongs to - it differs from the active outlet in the "All locations" view.
+    mutationFn: ({ reservationId, status, siteId }: { reservationId: string; status: ReservationStatus; siteId?: string }) =>
+      reservationService.updateReservationStatus(reservationId, status, siteId ?? restaurantId),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-reservations'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-org-reservations'] }),
+      ]),
   });
 }
 

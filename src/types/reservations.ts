@@ -21,6 +21,8 @@ export interface Reservation extends Tenant, Timestamps {
   paymentId?: string;
   depositAmountCents?: number;
   currency?: string;
+  /** Set on Org-wide ("All locations") lists; `restaurantId` is the outlet the booking belongs to. */
+  siteName?: string;
 }
 
 export interface ReservationTimeSlot {
@@ -62,6 +64,10 @@ export interface PublicReservationInput {
 }
 
 export interface PublicReservationConfirmation {
+  managementUrl?: string;
+  calendarUrl?: string;
+  googleCalendarUrl?: string;
+  emailStatus?: string;
   confirmationCode: string;
   date: string;
   timeSlot: string;
