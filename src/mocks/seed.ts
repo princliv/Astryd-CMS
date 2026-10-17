@@ -1,6 +1,7 @@
 import { db, nowIso, type MockDbShape } from './db';
 import { VERTICAL_MODULE_DEFAULTS, defaultTemplateVariant } from '../data/onboardingDefaults';
 import { buildGymSeed, buildRetailSeed, buildSalonSeed, buildCoffeeSeed, buildLaundrySeed } from './seedVerticals';
+import { buildFranchiseSeed, FRANCHISE_OWNER_EMAIL } from './franchiseSeed';
 import type {
   Addon,
   BrandSettings,
@@ -1180,11 +1181,19 @@ export function buildSeed(): MockDbShape {
     blockedDates: [],
   };
 
+  // --- Multi-location franchise demo (own Org/login): three outlets of "Ember & Oak". ---
+  const franchise = buildFranchiseSeed(
+    now,
+    { burger: RAW_ITEMS[0].image, pizza: RAW_ITEMS[1].image, wings: RAW_ITEMS[3].image, starter: SEA_BASS_URL, pasta: RAW_ITEMS[5].image, steak: RAW_ITEMS[6].image, dessert: RAW_ITEMS[7].image },
+    buildStarterSections,
+  );
+
   return {
-    organizations: [...organizations, gymOrganization, retailOrganization, salonOrganization, coffeeOrganization, laundryOrganization],
-    users: [...users, gymOwner, retailOwner, salonOwner, coffeeOwner, laundryOwner],
-    restaurants: [restaurant, secondSite, gymSite, retailSite, salonSite, coffeeSite, laundrySite],
+    organizations: [...organizations, gymOrganization, retailOrganization, salonOrganization, coffeeOrganization, laundryOrganization, ...franchise.organizations],
+    users: [...users, gymOwner, retailOwner, salonOwner, coffeeOwner, laundryOwner, ...franchise.users],
+    restaurants: [restaurant, secondSite, gymSite, retailSite, salonSite, coffeeSite, laundrySite, ...franchise.restaurants],
     brand: {
+      ...franchise.brand,
       [RESTAURANT_ID]: { draft: { ...brandSettings }, published: { ...brandSettings } },
       [SECOND_SITE_ID]: { draft: { ...secondSiteBrand }, published: { ...secondSiteBrand } },
       [GYM_SITE_ID]: { draft: { ...gymBrand }, published: { ...gymBrand } },
@@ -1194,6 +1203,7 @@ export function buildSeed(): MockDbShape {
       [LAUNDRY_SITE_ID]: { draft: { ...laundryBrand }, published: { ...laundryBrand } },
     },
     website: {
+      ...franchise.website,
       [RESTAURANT_ID]: {
         restaurantId: RESTAURANT_ID,
         publishStatus: 'published',
@@ -1259,6 +1269,7 @@ export function buildSeed(): MockDbShape {
       },
     },
     homepage: {
+      ...franchise.homepage,
       [RESTAURANT_ID]: { draft: homepageDraft, published: homepagePublished },
       [SECOND_SITE_ID]: { draft: { ...secondSiteHomepage }, published: { ...secondSiteHomepage } },
       [GYM_SITE_ID]: { draft: { ...gymHomepage }, published: { ...gymHomepage } },
@@ -1268,13 +1279,14 @@ export function buildSeed(): MockDbShape {
       [LAUNDRY_SITE_ID]: { draft: { ...laundryHomepage }, published: { ...laundryHomepage } },
     },
     media: [...media, ...gymSeed.media, ...retailSeed.media, ...salonSeed.media, ...coffeeSeed.media, ...laundrySeed.media],
-    categories: [...categories, ...gymSeed.categories, ...retailSeed.categories, ...salonSeed.categories, ...coffeeSeed.categories, ...laundrySeed.categories],
-    items: [...items, ...gymSeed.items, ...retailSeed.items, ...salonSeed.items, ...coffeeSeed.items, ...laundrySeed.items],
-    addons,
-    offers: [...offers, ...gymSeed.offers, ...retailSeed.offers, ...salonSeed.offers, ...coffeeSeed.offers, ...laundrySeed.offers],
-    orders,
-    reservations,
+    categories: [...categories, ...gymSeed.categories, ...retailSeed.categories, ...salonSeed.categories, ...coffeeSeed.categories, ...laundrySeed.categories, ...(franchise.categories ?? [])],
+    items: [...items, ...gymSeed.items, ...retailSeed.items, ...salonSeed.items, ...coffeeSeed.items, ...laundrySeed.items, ...(franchise.items ?? [])],
+    addons: [...addons, ...(franchise.addons ?? [])],
+    offers: [...offers, ...gymSeed.offers, ...retailSeed.offers, ...salonSeed.offers, ...coffeeSeed.offers, ...laundrySeed.offers, ...(franchise.offers ?? [])],
+    orders: [...orders, ...(franchise.orders ?? [])],
+    reservations: [...reservations, ...(franchise.reservations ?? [])],
     reservationAvailability: {
+      ...franchise.reservationAvailability,
       [RESTAURANT_ID]: reservationAvailabilitySettings,
       [SECOND_SITE_ID]: { ...reservationAvailabilitySettings, restaurantId: SECOND_SITE_ID },
       [GYM_SITE_ID]: gymAvailability,
@@ -1291,6 +1303,7 @@ export function buildSeed(): MockDbShape {
       ...buildPageConfigsForVertical(SALON_SITE_ID, 'salon'),
       ...buildPageConfigsForVertical(COFFEE_SITE_ID, 'coffee'),
       ...buildPageConfigsForVertical(LAUNDRY_SITE_ID, 'laundry'),
+      ...(franchise.pageConfigs ?? []),
     ],
     membershipPlans: [...membershipPlans, ...gymMembershipPlans, ...retailMembershipPlans, ...salonMembershipPlans, ...coffeeMembershipPlans, ...laundryMembershipPlans],
     members,
@@ -1303,15 +1316,19 @@ export function buildSeed(): MockDbShape {
       ...buildDefaultDomainMappings(SALON_SITE_ID, SALON_SITE_SLUG),
       ...buildDefaultDomainMappings(COFFEE_SITE_ID, COFFEE_SITE_SLUG),
       ...buildDefaultDomainMappings(LAUNDRY_SITE_ID, LAUNDRY_SITE_SLUG),
+      ...(franchise.domainMappings ?? []),
     ],
     // Every Site starts on the code defaults for its Vertical; owners only store what they change.
-    pageContent: Object.fromEntries(
-      [RESTAURANT_ID, SECOND_SITE_ID, GYM_SITE_ID, RETAIL_SITE_ID, SALON_SITE_ID, COFFEE_SITE_ID, LAUNDRY_SITE_ID].map((id) => [id, { draft: {}, published: {} }]),
-    ),
+    pageContent: {
+      ...Object.fromEntries(
+        [RESTAURANT_ID, SECOND_SITE_ID, GYM_SITE_ID, RETAIL_SITE_ID, SALON_SITE_ID, COFFEE_SITE_ID, LAUNDRY_SITE_ID].map((id) => [id, { draft: {}, published: {} }]),
+      ),
+      ...franchise.pageContent,
+    },
   };
 }
 
-const DEMO_EMAILS = ['owner@lumiere.com', 'staff@lumiere.com', 'admin@platform.com'];
+const DEMO_EMAILS = ['owner@lumiere.com', 'staff@lumiere.com', 'admin@platform.com', FRANCHISE_OWNER_EMAIL];
 
 function hasDemoUsers() {
   const emails = new Set(db.data.users.map((u) => u.email.toLowerCase()));
