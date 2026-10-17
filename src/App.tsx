@@ -19,6 +19,7 @@ import { PublicDataProvider, usePublicData } from './context/PublicDataContext';
 import { usePageContent } from './context/usePageContent';
 import { usePreviewBridge } from './preview/usePreviewBridge';
 import { ThemeProvider } from './theme/ThemeProvider';
+import { applyBrandFavicon } from './theme/brandFavicon';
 import { HeroSection } from './sections/HeroSection';
 import { SectionRenderer } from './sections/SectionRenderer';
 import { resolveGalleryImages } from './sections/galleryUtils';
@@ -71,6 +72,11 @@ function AppShell() {
   useEffect(() => {
     if (brand?.restaurantName) document.title = brand.restaurantName;
   }, [brand?.restaurantName]);
+  const tabIconId = brand?.faviconMediaId ?? brand?.logoMediaId;
+  const tabIconUrl = tabIconId ? mediaMap.get(tabIconId)?.fileUrl : undefined;
+  useEffect(() => {
+    if (brand) applyBrandFavicon(brand, tabIconUrl);
+  }, [brand, tabIconUrl]);
   const checkoutContent = usePageContent('checkout');
   usePreviewBridge();
   const [currentPage, setCurrentPageState] = useState<AppPage>(() => pageFromHash());

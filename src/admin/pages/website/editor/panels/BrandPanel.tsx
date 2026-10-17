@@ -47,11 +47,16 @@ export function BrandPanel({ mode, ...callbacks }: { mode: 'header' | 'style' } 
 
   if (mode === 'header') {
     const logoUrl = media?.items.find((m) => m.id === draft.logoMediaId)?.fileUrl;
+    const faviconUrl = media?.items.find((m) => m.id === draft.faviconMediaId)?.fileUrl;
     return (
       <div className="space-y-5">
         <SectionCard title="Logo & name">
           <div className="space-y-5">
             <ImagePickerField label="Logo" currentImageUrl={logoUrl} onSelect={(asset) => set({ logoMediaId: asset.id })} onRemove={() => set({ logoMediaId: null })} />
+            <div>
+              <ImagePickerField label="Browser tab icon" currentImageUrl={faviconUrl} onSelect={(asset) => set({ faviconMediaId: asset.id })} onRemove={() => set({ faviconMediaId: null })} />
+              <p className="text-xs text-secondary mt-1.5">Optional square image shown in the browser tab next to your business name. Uses your logo if left empty.</p>
+            </div>
             <TextField label="Business name" maxLength={100} value={draft.restaurantName} onChange={(e) => set({ restaurantName: e.target.value })} />
           </div>
         </SectionCard>

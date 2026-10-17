@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { managementRequest, type ManagedBooking } from '../../services/bookingManagement';
+import { applyBrandFavicon } from '../../theme/brandFavicon';
 import './management.css';
 
 export function ManagementPage() {
@@ -21,7 +22,11 @@ export function ManagementPage() {
     return () => { active = false; meta.remove(); };
   }, [token]);
   const businessName = data?.business.name;
-  useEffect(() => { document.title = businessName ? `${businessName} · Manage booking` : 'Manage booking · Astryd'; }, [businessName]);
+  const businessLogo = data?.business.logo;
+  useEffect(() => { document.title = businessName ? `${businessName} · Manage booking` : 'Manage booking'; }, [businessName]);
+  useEffect(() => {
+    if (businessName) applyBrandFavicon({ restaurantName: businessName, themePresetId: '', customPrimaryColor: undefined }, businessLogo || undefined);
+  }, [businessName, businessLogo]);
   const chosenDate = choices?.date;
   const chosenParty = choices?.party_size;
   const chosenPreference = choices?.seating_preference;

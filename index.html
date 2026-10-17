@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lumière Reservations | Fine Dining Management</title>
+    <title>Astryd</title>
 
     <!-- Google Fonts: Cormorant Garamond, Geist & Material Symbols Outlined -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -123,7 +123,13 @@
           var p = location.pathname;
           var isPreview = new URLSearchParams(location.search).get('preview') === 'true';
           var platform = ['/', '/login', '/signup', '/super-admin', '/forgot-password', '/reset-password'];
-          if (isPreview || !(p.indexOf('/admin') === 0 || platform.indexOf(p) !== -1)) return;
+          if (isPreview || !(p.indexOf('/admin') === 0 || platform.indexOf(p) !== -1)) {
+            // A business's own website: never flash the Astryd icon or name before its brand loads.
+            var icon = document.querySelector('link[rel="icon"]');
+            if (icon) { icon.removeAttribute('type'); icon.href = 'data:,'; }
+            document.title = '';
+            return;
+          }
           var theme = localStorage.getItem('lumiere-admin-theme') || 'system';
           var resolved = theme === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme;
           document.documentElement.classList.remove('light', 'dark');
