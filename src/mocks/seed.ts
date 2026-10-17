@@ -1182,11 +1182,7 @@ export function buildSeed(): MockDbShape {
   };
 
   // --- Multi-location franchise demo (own Org/login): three outlets of "Ember & Oak". ---
-  const franchise = buildFranchiseSeed(
-    now,
-    { burger: RAW_ITEMS[0].image, pizza: RAW_ITEMS[1].image, wings: RAW_ITEMS[3].image, starter: SEA_BASS_URL, pasta: RAW_ITEMS[5].image, steak: RAW_ITEMS[6].image, dessert: RAW_ITEMS[7].image },
-    buildStarterSections,
-  );
+  const franchise = buildFranchiseSeed(now);
 
   return {
     organizations: [...organizations, gymOrganization, retailOrganization, salonOrganization, coffeeOrganization, laundryOrganization, ...franchise.organizations],
@@ -1278,7 +1274,7 @@ export function buildSeed(): MockDbShape {
       [COFFEE_SITE_ID]: { draft: { ...coffeeHomepage }, published: { ...coffeeHomepage } },
       [LAUNDRY_SITE_ID]: { draft: { ...laundryHomepage }, published: { ...laundryHomepage } },
     },
-    media: [...media, ...gymSeed.media, ...retailSeed.media, ...salonSeed.media, ...coffeeSeed.media, ...laundrySeed.media],
+    media: [...media, ...gymSeed.media, ...retailSeed.media, ...salonSeed.media, ...coffeeSeed.media, ...laundrySeed.media, ...(franchise.media ?? [])],
     categories: [...categories, ...gymSeed.categories, ...retailSeed.categories, ...salonSeed.categories, ...coffeeSeed.categories, ...laundrySeed.categories, ...(franchise.categories ?? [])],
     items: [...items, ...gymSeed.items, ...retailSeed.items, ...salonSeed.items, ...coffeeSeed.items, ...laundrySeed.items, ...(franchise.items ?? [])],
     addons: [...addons, ...(franchise.addons ?? [])],
